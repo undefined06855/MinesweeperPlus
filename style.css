@@ -1,0 +1,36 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    height: 100%;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+}
+
+canvas {
+    background-color: #fff;
+}
+
+@media screen and (min-aspect-ratio: 4/3) {
+    /* Code for larger aspect ratio (wider screens) */
+    canvas {
+        height: 100%;
+        width: auto;
+    }
+}
+
+@media screen and (max-aspect-ratio: 4/3) {
+    /* Code for smaller aspect ratio (more vertical screens) */
+    canvas {
+        width: 100%;
+        height: auto;
+    }
+}
