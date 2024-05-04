@@ -34,7 +34,6 @@ let sweeper
     await loadGlobalAssets()
     
     sweeper = new Sweeper(9, 9, 10)
-    sweeper.initTiles()
     
     registerTickers()
     

@@ -2,9 +2,9 @@
 class MineTile extends BaseMineTile {
     static async load() {
         return new Promise(resolve => {
-            Utils.tileLoadImageAssets("MineTile", ["bomb.png"])
+            Utils.tileLoadImageAssets("MineTile", ["mine.png"])
             .then(images => {
-                MineTile.bombImage = images[0]
+                MineTile.mineImage = images[0]
                 resolve()
             })
         })
@@ -22,7 +22,7 @@ class MineTile extends BaseMineTile {
      */
     static draw(cell) {
         ctx.drawImage(
-            MineTile.bombImage,
+            MineTile.mineImage,
             cell.col * sweeper.tileSize,
             cell.row * sweeper.tileSize,
             sweeper.tileSize,

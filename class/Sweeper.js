@@ -2,22 +2,26 @@ class Sweeper {
     /**
      * @param {number} width 
      * @param {number} height 
-     * @param {number} bombs 
+     * @param {number} mines 
      */
-    constructor(width, height, bombs) {
+    constructor(width, height, mines) {
         // lamp oil?
         /** @type Array<Array<Cell>> */
         this.grid = []
         this.width = width
         this.height = height
-        this.bombs = bombs
+        this.mines = mines
+
+        this.firstClick = true
 
         this.tileSize = 720 / height
+        this.createGrid()
+    }
 
-        // rope?
-        for (let rowIndex = 0; rowIndex < height; rowIndex++) {
+    createGrid() {
+        for (let rowIndex = 0; rowIndex < this.height; rowIndex++) {
             let row = []
-            for (let colIndex = 0; colIndex < width; colIndex++) {
+            for (let colIndex = 0; colIndex < this.width; colIndex++) {
                 let cell = new Cell(tileManager.getRandomNonBombTileID(), rowIndex, colIndex)
                 row.push(cell)
             }
@@ -25,8 +29,7 @@ class Sweeper {
             this.grid.push(row)
         }
 
-        // bombs?
-        for (let i = 0; i < bombs; i++) {
+        for (let i = 0; i < this.mines; i++) {
             let row = ~~(Math.random() * this.grid.length)
             let col = ~~(Math.random() * this.grid[row].length)
             this.grid[row][col] = new Cell(tileManager.getRandomBombTileID(), row, col)
@@ -95,11 +98,32 @@ class Sweeper {
         }
     }
 
+    kablooey() {
+        // Kaboom?
+        // Yes Rico, kaboom.
+        
+    }
+
     onClick(x, y) {
         let col = ~~(x / this.tileSize)
         let row = ~~(y / this.tileSize)
 
         if (col > this.width) return
+
+        if (this.firstClick) {
+            // first click should never be a mine (obviously) so regenerate grid
+            // until it isnt a mine
+            while (tileManager.getTile(this.grid[row][col].id).isMine) {
+                console.log("first click is a mine! regenerating grid...")
+                this.grid = []
+                this.createGrid()
+            }
+            
+            // then initialise tiles on first click
+            this.initTiles()
+        }
+
+        this.firstClick = false
 
         this.click(row, col)
     }

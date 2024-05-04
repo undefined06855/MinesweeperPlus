@@ -14,7 +14,7 @@ class BaseTile {
      * @param {Cell} cell 
      */
     static init(cell) {
-        throw(new Error("A static init(Cell*) must be defined when extending BaseTile!"))
+        console.debug("Cell initialising")
     }
 
     /**
@@ -54,14 +54,14 @@ class BaseTile {
      * @param {Cell} cell 
      */
     static onUncovered(cell) {
-        console.log("Cell uncovered")
+        console.debug("Cell uncovered")
     }
 
     /**
      * @param {Cell} cell 
      */
     static onFlagged(cell) {
-        console.log("Cell flagged")
+        console.debug("Cell flagged")
     }
 
     
@@ -69,6 +69,6 @@ class BaseTile {
      * @param {Cell} cell 
      */
     static onUnflagged(cell) {
-        console.log("Cell unflagged")
+        console.debug("Cell unflagged")
     }
 }
