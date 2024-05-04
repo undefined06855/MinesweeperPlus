@@ -9,5 +9,7 @@ class Cell {
         this.row = row
         this.col = col
         this.data = {}
+        this.uncovered = false
+        this.flagged = false
     }
 }

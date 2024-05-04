@@ -2,7 +2,7 @@
 class MineTile extends BaseMineTile {
     static async load() {
         return new Promise(resolve => {
-            Utils.genericLoadImageAssets("MineTile", ["bomb.png"])
+            Utils.tileLoadImageAssets("MineTile", ["bomb.png"])
             .then(images => {
                 MineTile.bombImage = images[0]
                 resolve()

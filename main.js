@@ -11,7 +11,7 @@ let sweeper
 (async () => {
     ticker = new Ticker()
     tileManager = new TileManager()
-    
+
     // register all tiles
     async function registerTiles() {
         await tileManager.register(GenericTile)
@@ -21,8 +21,17 @@ let sweeper
     function registerTickers() {
         ticker.registerDrawable(sweeper)
     }
+
+    async function loadGlobalAssets() {
+        let assets = await Utils.loadImageAssets("./assets/game/", ["covered.png", "flagged.png", "flaggedWrong.png", "kablooey.png"])
+        GlobalAssets.covered = assets[0]
+        GlobalAssets.flagged = assets[1]
+        GlobalAssets.flaggedWrong = assets[2]
+        GlobalAssets.kablooey = assets[3]
+    }
     
     await registerTiles()
+    await loadGlobalAssets()
     
     sweeper = new Sweeper(9, 9, 10)
     sweeper.initTiles()

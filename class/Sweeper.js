@@ -12,7 +12,7 @@ class Sweeper {
         this.height = height
         this.bombs = bombs
 
-        this.tileSize = 72
+        this.tileSize = 720 / height
 
         // rope?
         for (let rowIndex = 0; rowIndex < height; rowIndex++) {
@@ -48,8 +48,80 @@ class Sweeper {
             for (let col = 0; col < this.grid[row].length; col++) {
                 let cell = this.grid[row][col]
                 let tile = tileManager.getTile(cell.id)
-                tile.draw(cell)
+                if (cell.uncovered) {
+                    tile.draw(cell)
+                } else if (cell.flagged) {
+                    tile.drawFlagged(cell)
+                } else {
+                    tile.drawCovered(cell)
+                }
             }
         }
+    }
+
+    click(row, col) {
+        let cell = this.grid[row][col]
+        if (cell.uncovered) return
+        cell.uncovered = true
+        let cellOrigFlagged = cell.flagged
+        cell.flagged = false
+        if (cellOrigFlagged) tileManager.getTile(cell.id).onUnflagged(cell)
+        tileManager.getTile(cell.id).onUncovered(cell)
+
+        if (!tileManager.getTile(cell.id).disableAutoReveal && !tileManager.getTile(cell.id).isBomb) {
+            let surroundingBombs = Utils.countSurroundingBombs(cell.row, cell.col)
+            if (surroundingBombs == 0) {
+                let surroundingCellLocations = [
+                    [-1, -1],
+                    [0, -1],
+                    [1, -1],
+                    [-1, 0],
+                    [1, 0],
+                    [-1, 1],
+                    [0, 1],
+                    [1, 1]
+                ]
+
+                surroundingCellLocations.forEach(location => {
+                    let newCell = Utils.getCellSafe(cell.row + location[0], cell.col + location[1])
+                    if (newCell == false) return
+                    if (!newCell.uncovered) {
+                        this.click(newCell.row, newCell.col)
+                    }
+                })
+            }
+        }
+    }
+
+    flag(row, col) {
+        let cell = this.grid[row][col]
+        // shouldnt be able to flag / unflag if the cell has been uncovered
+        if (cell.uncovered) return
+
+        if (cell.flagged) {
+            cell.flagged = false
+            tileManager.getTile(cell.id).onUnflagged(cell)
+        } else {
+            cell.flagged = true
+            tileManager.getTile(cell.id).onFlagged(cell)
+        }
+    }
+
+    onClick(x, y) {
+        let col = ~~(x / this.tileSize)
+        let row = ~~(y / this.tileSize)
+
+        if (col > this.width) return
+
+        this.click(row, col)
+    }
+
+    onFlag(x, y) {
+        let col = ~~(x / this.tileSize)
+        let row = ~~(y / this.tileSize)
+
+        if (col > this.width) return
+
+        this.flag(row, col)
     }
 }
