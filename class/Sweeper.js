@@ -68,25 +68,13 @@ class Sweeper {
         if (cellOrigFlagged) tileManager.getTile(cell.id).onUnflagged(cell)
         tileManager.getTile(cell.id).onUncovered(cell)
 
-        if (!tileManager.getTile(cell.id).disableAutoReveal && !tileManager.getTile(cell.id).isBomb) {
+        // auto reveal
+        if (!tileManager.getTile(cell.id).disableAutoReveal) {
             let surroundingBombs = Utils.countSurroundingBombs(cell.row, cell.col)
             if (surroundingBombs == 0) {
-                let surroundingCellLocations = [
-                    [-1, -1],
-                    [0, -1],
-                    [1, -1],
-                    [-1, 0],
-                    [1, 0],
-                    [-1, 1],
-                    [0, 1],
-                    [1, 1]
-                ]
-
-                surroundingCellLocations.forEach(location => {
-                    let newCell = Utils.getCellSafe(cell.row + location[0], cell.col + location[1])
-                    if (newCell == false) return
-                    if (!newCell.uncovered) {
-                        this.click(newCell.row, newCell.col)
+                Utils.loopOverSurroundingCells(cell.row, cell.col, cell => {
+                    if (!cell.uncovered) {
+                        this.click(cell.row, cell.col)
                     }
                 })
             }

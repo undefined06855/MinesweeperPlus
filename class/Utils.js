@@ -45,23 +45,41 @@ class Utils {
     }
 
     /**
+     * @param {Number} row 
+     * @param {Number} col 
+     * @param {function(Cell)} callback 
+     */
+    static loopOverSurroundingCells(row, col, callback) {
+        let surroundingCellLocations = [
+            [-1, -1],
+            [0, -1],
+            [1, -1],
+            [-1, 0],
+            [1, 0],
+            [-1, 1],
+            [0, 1],
+            [1, 1]
+        ]
+
+        surroundingCellLocations.forEach(location => {
+            let newCell = Utils.getCellSafe(row + location[0], col + location[1])
+            if (newCell == false) return
+            callback(newCell)
+        })
+    }
+
+    /**
      * @param {number} row 
      * @param {number} col 
      */
     static countSurroundingBombs(row, col) {
         let mines = 0
 
-        try { mines += tileManager.getTile(sweeper.grid[row - 1][col - 1].id).isMine } catch(_) {}
-        try { mines += tileManager.getTile(sweeper.grid[row    ][col - 1].id).isMine } catch(_) {}
-        try { mines += tileManager.getTile(sweeper.grid[row + 1][col - 1].id).isMine } catch(_) {}
-
-        try { mines += tileManager.getTile(sweeper.grid[row - 1][col    ].id).isMine } catch(_) {}
-
-        try { mines += tileManager.getTile(sweeper.grid[row + 1][col    ].id).isMine } catch(_) {}
-
-        try { mines += tileManager.getTile(sweeper.grid[row - 1][col + 1].id).isMine } catch(_) {}
-        try { mines += tileManager.getTile(sweeper.grid[row    ][col + 1].id).isMine } catch(_) {}
-        try { mines += tileManager.getTile(sweeper.grid[row + 1][col + 1].id).isMine } catch(_) {}
+        Utils.loopOverSurroundingCells(row, col, cell => {
+            if (tileManager.getTile(cell.id).isMine) {
+                mines++
+            }
+        })
 
         return mines
     }
