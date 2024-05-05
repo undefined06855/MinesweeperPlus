@@ -9,7 +9,12 @@ class Cell {
         this.row = row
         this.col = col
         this.data = {}
-        this.uncovered = false
-        this.flagged = false
+        this.state = CellState.Covered
     }
+}
+
+const CellState = {
+    Covered: 0,
+    Uncovered: 1,
+    Flagged: 2
 }

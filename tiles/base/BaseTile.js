@@ -7,7 +7,7 @@ class BaseTile {
      * @returns {undefined | Promise<void>}
      */
     static async load() {
-
+        console.debug("Cell loading")
     }
 
     /**
@@ -21,7 +21,7 @@ class BaseTile {
      * @param {Cell} cell 
      */
     static draw(cell) {
-        throw(new Error("A static draw(Cell*) must be defined when extending BaseTile!"))
+        console.debug("Cell drawing")
     }
 
     /**

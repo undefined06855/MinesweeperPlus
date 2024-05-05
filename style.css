@@ -13,13 +13,14 @@ body {
     justify-content: center;
     align-items: center;
     background-color: #000;
+    overflow: hidden;
 }
 
 canvas {
     background-color: #fff;
 }
 
-@media screen and (min-aspect-ratio: 4/3) {
+@media screen and (min-aspect-ratio: 1920/1080) {
     /* Code for larger aspect ratio (wider screens) */
     canvas {
         height: 100%;
@@ -27,7 +28,7 @@ canvas {
     }
 }
 
-@media screen and (max-aspect-ratio: 4/3) {
+@media screen and (max-aspect-ratio: 1920/1080) {
     /* Code for smaller aspect ratio (more vertical screens) */
     canvas {
         width: 100%;

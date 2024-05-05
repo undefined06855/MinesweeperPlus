@@ -1,9 +1,6 @@
 class TileManager {
     constructor() {
-        // <any> here is actually a BaseTile but you can't show that in JSDoc
-        // without it assuming it's an instance of a BaseTile (which obviously
-        // wont have any of the static stuff)
-        /** @type Array<any> */
+        /** @type Array<typeof BaseTile> */
         this.tiles = []
     }
 

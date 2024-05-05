@@ -1,25 +1,21 @@
 let canvas = document.querySelector("canvas")
 let ctx = canvas.getContext("2d")
 
-/** @type Ticker */
-let ticker
 /** @type TileManager */
 let tileManager
 /** @type Sweeper */
 let sweeper
 
+/** @type number */
+let dt
+
 (async () => {
-    ticker = new Ticker()
     tileManager = new TileManager()
 
     // register all tiles
     async function registerTiles() {
         await tileManager.register(GenericTile)
         await tileManager.register(MineTile)
-    }
-    
-    function registerTickers() {
-        ticker.registerDrawable(sweeper)
     }
 
     async function loadGlobalAssets() {
@@ -33,16 +29,25 @@ let sweeper
     await registerTiles()
     await loadGlobalAssets()
     
-    sweeper = new Sweeper(9, 9, 10)
+    sweeper = new Sweeper(15, 15, 25)
     
-    registerTickers()
-    
+    let dt
+    let lastTime = performance.now()
     function loop() {
-        ticker.tick()
+        ctx.clearRect(0, 0, 1920, 1080)
+
+        dt = (performance.now() - lastTime)
+        lastTime = performance.now()
+
+        sweeper.tick(dt)
+        sweeper.animations.forEach(anim => anim.tick(dt))
+
+        sweeper.animations.forEach(anim => anim.preDraw())
+        sweeper.draw()
+        sweeper.animations.forEach(anim => anim.postDraw())
+
         requestAnimationFrame(loop)
     }
     
     requestAnimationFrame(loop)
 })()
-
-
