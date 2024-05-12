@@ -1,12 +1,11 @@
-// generic "normal" tile
 class GenericTile extends BaseTile {
     static async load() {
         return new Promise(resolve => {
-            Utils.tileLoadImageAssets("GenericTile", ["0.png", "1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png"])
+            Utils.tileLoadImageAssets("GenericTile", ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png"])
             .then(images => {
                 GenericTile.images = []
                 for (let i = 0; i <= 8; i++) {
-                    GenericTile.images[i] = images[i]
+                    GenericTile.images[i + 1] = images[i]
                 }
 
                 resolve()

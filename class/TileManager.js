@@ -2,14 +2,23 @@ class TileManager {
     constructor() {
         /** @type Array<typeof BaseTile> */
         this.tiles = []
+        this.totalGenerationChance = 0
     }
 
     /**
-     * @param {any} tile 
+     * @param {typeof BaseTile} tile 
      */
     async register(tile) {
         this.tiles.push(tile)
+        this.totalGenerationChance += tile.generationChance
         await tile.load()
+    }
+
+    finishRegister() {
+        // calculate percentage chances for tiles
+        for (let tile of this.tiles) {
+            tile.mappedGenerationChance = tile.generationChance / this.totalGenerationChance
+        }
     }
 
     getTile(index) {
@@ -19,7 +28,9 @@ class TileManager {
     getRandomNonBombTileID() {
         let id
         do {
-            id = ~~(this.tiles.length * Math.random())
+            do {
+                id = ~~(this.tiles.length * Math.random())
+            } while (this.getTile(id).mappedGenerationChance <= Math.random())
         } while (this.getTile(id).isMine)
 
         return id
@@ -28,7 +39,9 @@ class TileManager {
     getRandomBombTileID() {
         let id
         do {
-            id = ~~(this.tiles.length * Math.random())
+            do {
+                id = ~~(this.tiles.length * Math.random())
+            } while (this.getTile(id).mappedGenerationChance <= Math.random())
         } while (!this.getTile(id).isMine)
 
         return id

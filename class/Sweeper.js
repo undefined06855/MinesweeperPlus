@@ -16,10 +16,12 @@ class Sweeper {
         this.animations = []
 
         this.firstClick = true
-        this.state = GameState.Playing
-        this.animTimer = 0
+        this.state = SweeperState.Playing
 
         this.tileSize = 1080 / height
+        this.offsetX = 0
+        this.offsetY = 0
+        
         this.createGrid()
     }
 
@@ -51,13 +53,6 @@ class Sweeper {
         }
     }
 
-    /**
-     * @param {number} dt 
-     */
-    tick(dt) {
-        if (this.state != GameState.Playing) this.animTimer += dt
-    }
-
     draw() {
         for (let row = 0; row < this.grid.length; row++) {
             for (let col = 0; col < this.grid[row].length; col++) {
@@ -68,18 +63,33 @@ class Sweeper {
                     case CellState.Uncovered:
                         // uncovered mines should be exploded
                         if (tile.isMine) tile.drawExploded(cell)
-                        else tile.draw(cell)
+                        else {
+                            // check if it's in the middle and if it overrides the 0 tile
+                            let surrounding = Utils.countSurroundingBombs(row, col)
+                            if (surrounding == 0 && tile.overrides0Tile)
+                                                       tile.draw(cell)
+                            else if (surrounding == 0) tile.draw0Tile(cell)
+                            else                       tile.draw(cell)
+                        }
                         break
                     // flagged are just flagged
-                    case CellState.Flagged: tile.drawFlagged(cell); break
+                    case CellState.Flagged:
+                        // if it's not a mine and flagged it's wrong
+                        if (this.state == SweeperState.Exploded && !tile.isMine)
+                            tile.drawFlaggedWrong(cell)
+                        else tile.drawFlagged(cell)
+                        break
                     case CellState.Covered:
                         // if we;ve exploded, just draw all the mines even if
                         // they're covered
-                        if (tile.isMine && this.state == GameState.Exploded)
+                        if (tile.isMine && this.state == SweeperState.Exploded)
                             tile.draw(cell)
                         else tile.drawCovered(cell)
                         
                         break
+                    
+                    default:
+                        tile.drawFallback(cell)
                 }
             }
         }
@@ -126,7 +136,7 @@ class Sweeper {
     kablooey() {
         // Kaboom?
         // Yes Rico, kaboom.
-        this.state = GameState.Exploded
+        this.state = SweeperState.Exploded
         this.animations.push(new Anim(AnimType.Shake, 24, 370, this.animations))
     }
 
@@ -134,9 +144,9 @@ class Sweeper {
         let col = ~~(x / this.tileSize)
         let row = ~~(y / this.tileSize)
 
-        if (col > this.width) return
+        if (col >= this.width) return
         if (row >= this.height) return
-        if (this.state != GameState.Playing) return
+        if (this.state != SweeperState.Playing) return
 
         if (this.firstClick) {
             // first click should never be a mine (obviously) so regenerate grid
@@ -162,14 +172,14 @@ class Sweeper {
 
         if (col >= this.width) return
         if (row >= this.height) return
-        if (this.state != GameState.Playing) return
+        if (this.state != SweeperState.Playing) return
 
         this.flag(row, col)
     }
 }
 
 /** @enum */
-const GameState = {
+const SweeperState = {
     Playing: 0,
     Exploded: 1,
     Detonated: 2

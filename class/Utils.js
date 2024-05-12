@@ -96,4 +96,13 @@ class Utils {
         if (cell == undefined) return false
         return cell
     }
+
+    /**
+     * @param {HTMLImageElement} image 
+     * @param {number} width 
+     * @param {number} height 
+     */
+    static create9Slice(image, width, height) {
+
+    }
 }

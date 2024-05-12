@@ -1,0 +1,9 @@
+class Title {
+    tick() {
+
+    }
+    
+    draw() {
+
+    }
+}

@@ -1,4 +1,3 @@
-// generic mine tile
 class MineTile extends BaseMineTile {
     static async load() {
         return new Promise(resolve => {
