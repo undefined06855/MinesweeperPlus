@@ -1,11 +1,11 @@
-class Sweeper {
+class Sweeper extends InitialisableClass {
     /**
      * @param {number} width 
      * @param {number} height 
      * @param {number} mines 
      */
     constructor(width, height, mines) {
-        // lamp oil?
+        super()
         /** @type Array<Array<Cell>> */
         this.grid = []
         this.width = width
@@ -23,6 +23,12 @@ class Sweeper {
         this.offsetY = 0
         
         this.createGrid()
+    }
+
+    init() {
+        EventHandler.registerButton(0, 0, 1920, 1080, (x, y) => this.onClick(x, y), true)
+
+        EventHandler.registerButton(0, 0, 1920, 1080, (x, y) => this.onFlag(x, y), true, 2)
     }
 
     createGrid() {
@@ -54,11 +60,16 @@ class Sweeper {
     }
 
     draw() {
+        ctx.fillStyle = "#ffffff"
+        ctx.fillRect(0, 0, 1920, 1080)
+
         for (let row = 0; row < this.grid.length; row++) {
             for (let col = 0; col < this.grid[row].length; col++) {
                 let cell = this.grid[row][col]
                 let tile = tileManager.getTile(cell.id)
-                
+
+                ctx.translate(cell.col * this.tileSize, cell.row * this.tileSize)
+ 
                 switch(cell.state) {
                     case CellState.Uncovered:
                         // uncovered mines should be exploded
@@ -66,10 +77,8 @@ class Sweeper {
                         else {
                             // check if it's in the middle and if it overrides the 0 tile
                             let surrounding = Utils.countSurroundingBombs(row, col)
-                            if (surrounding == 0 && tile.overrides0Tile)
-                                                       tile.draw(cell)
-                            else if (surrounding == 0) tile.draw0Tile(cell)
-                            else                       tile.draw(cell)
+                            if (surrounding == 0) tile.draw0Tile(cell)
+                            else                  tile.draw(cell)
                         }
                         break
                     // flagged are just flagged
@@ -84,6 +93,7 @@ class Sweeper {
                         // they're covered
                         if (tile.isMine && this.state == SweeperState.Exploded)
                             tile.draw(cell)
+                        // else just draw normally
                         else tile.drawCovered(cell)
                         
                         break
@@ -91,11 +101,17 @@ class Sweeper {
                     default:
                         tile.drawFallback(cell)
                 }
+
+                // if i use reset here animations wont work
+                ctx.translate(-cell.col * this.tileSize, -cell.row * this.tileSize)
+
             }
         }
     }
 
     click(row, col) {
+        if (GameHandler.state != GameState.Game) return
+
         let cell = this.grid[row][col]
         // shouldnt be able to click if the cell has been uncovered
         if (cell.state == CellState.Uncovered) return
@@ -120,6 +136,8 @@ class Sweeper {
     }
 
     flag(row, col) {
+        if (GameHandler.state != GameState.Game) return
+
         let cell = this.grid[row][col]
         // shouldnt be able to flag / unflag if the cell has been uncovered
         if (cell.state == CellState.Uncovered) return
@@ -146,8 +164,9 @@ class Sweeper {
 
         if (col >= this.width) return
         if (row >= this.height) return
+        
         if (this.state != SweeperState.Playing) return
-
+        console.log("op")
         if (this.firstClick) {
             // first click should never be a mine (obviously) so regenerate grid
             // until it isnt a mine

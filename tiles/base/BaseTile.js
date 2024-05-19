@@ -3,30 +3,41 @@ class BaseTile {
     static isMine = false
     static disableAutoReveal = false
     static generationChance = 1
-    static overrides0Tile = false
-    
+    static appearsInTitle = true
+    static name = "(unnamed tile)"
+    static description = [ "(no description)" ]
+
     // this gets set by TileManager
-    static mappedGenerationChance
+    static mappedGenerationChance = null
 
     /**
      * @returns {undefined | Promise<void>}
      */
     static async load() {
-        console.debug("Cell loading")
+
     }
 
     /**
      * @param {Cell} cell 
      */
     static init(cell) {
-        console.debug("Cell initialising")
+        
     }
 
     /**
      * @param {Cell} cell 
      */
     static draw(cell) {
-        console.debug("Cell drawing")
+        BaseTile.drawFallback(cell)
+    }
+
+    /**
+     * @param {number} index 
+     * @param {number} width 
+     * @param {number} height 
+     */
+    static drawPreview(index, width, height) {
+        BaseTile.drawFallback()
     }
 
     /**
@@ -35,8 +46,8 @@ class BaseTile {
     static drawCovered(cell) {
         ctx.drawImage(
             GlobalAssets.covered,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
         )
@@ -48,8 +59,8 @@ class BaseTile {
     static draw0Tile(cell) {
         ctx.drawImage(
             GlobalAssets.tile0,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
         )
@@ -61,8 +72,8 @@ class BaseTile {
     static drawFlagged(cell) {
         ctx.drawImage(
             GlobalAssets.flagged,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
         )
@@ -74,8 +85,8 @@ class BaseTile {
     static drawFlaggedWrong(cell) {
         ctx.drawImage(
             GlobalAssets.flaggedWrong,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
         )
@@ -86,12 +97,24 @@ class BaseTile {
      */
     static drawFallback(cell) {
         ctx.fillStyle = "#ff00f2"
-        ctx.fillRect(
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
-            sweeper.tileSize,
-            sweeper.tileSize
-        )
+
+        try {
+            ctx.fillRect(
+                0,
+                0,
+                sweeper.tileSize,
+                sweeper.tileSize
+            )
+        } catch(_) {
+            ctx.fillRect(
+                0,
+                0,
+                // eh probably close enough to what you want
+                48,
+                48
+            )
+        }
+
     }
 
     /**

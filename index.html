@@ -5,15 +5,20 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="style.css" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Righteous&family=Rock+Salt&display=swap" rel="stylesheet">
         <link rel="shortcut icon" href="./favicon.png" type="image/png">
         <title>Minesweeper+</title>
     </head>
     <body>
         <canvas width="1920" height="1080"></canvas>
 
+        <script src="class/InitialisableClass.js"></script>
         <script src="class/Utils.js"></script>
         <script src="class/GlobalAssets.js"></script>
         <script src="class/Anim.js"></script>
+        <script src="class/Fonter.js"></script>
 
         <script src="tiles/base/BaseTile.js"></script>
         <script src="tiles/base/BaseMineTile.js"></script>
@@ -22,16 +27,22 @@
         <script src="tiles/MysteryTile.js"></script>
         <script src="tiles/MineTile.js"></script>
         <script src="tiles/LyingTile.js"></script>
+        <script src="tiles/TestTile.js"></script>
 
         <script src="class/Cell.js"></script>
         <script src="class/TileManager.js"></script>
-        <script src="class/Sweeper.js"></script>
-        <script src="class/Title.js"></script>
+        <script src="class/SetupPresetData.js"></script>
+        <script src="class/screen/Sweeper.js"></script>
+        <script src="class/screen/Title.js"></script>
+        <script src="class/screen/SetupScreen.js"></script>
+        <script src="class/screen/LoadingScreen.js"></script>
         <script src="class/LoadHandler.js"></script>
         <script src="class/GameHandler.js"></script>
+        <script src="class/Transitioner.js"></script>
 
         <script src="main.js"></script>
 
+        <script src="class/EventHandlerButton.js"></script>
         <script src="class/EventHandler.js"></script>
     </body>
 </html>

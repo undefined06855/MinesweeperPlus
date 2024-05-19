@@ -17,7 +17,7 @@ class Anim {
         this.animData = {}
     }
 
-    tick(dt) {
+    tick() {
         if (!this.paused)
             this.timer += dt
 

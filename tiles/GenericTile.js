@@ -1,4 +1,6 @@
 class GenericTile extends BaseTile {
+    static name = "normal tile"
+    static description = [ "A normal tile, does what you expect." ]
     static async load() {
         return new Promise(resolve => {
             Utils.tileLoadImageAssets("GenericTile", ["1.png", "2.png", "3.png", "4.png", "5.png", "6.png", "7.png", "8.png"])
@@ -27,10 +29,26 @@ class GenericTile extends BaseTile {
     static draw(cell) {
         ctx.drawImage(
             GenericTile.images[cell.data.mineCount],
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
+        )
+    }
+
+    /**
+     * @param {number} index 
+     * @param {number} width 
+     * @param {number} height 
+     */
+    static drawPreview(index, width, height) {
+        let imageIndex = index % 8 + 1
+        ctx.drawImage(
+            GenericTile.images[~~imageIndex],
+            0,
+            0,
+            width,
+            height
         )
     }
 }

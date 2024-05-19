@@ -1,4 +1,6 @@
 class MysteryTile extends BaseTile {
+    static name = "mystery tile"
+    static description = [ "Mysterious! It doesn't tell you how many mines", "actually surrounds it." ]
     static generationChance = 0.07
 
     static async load() {
@@ -24,10 +26,20 @@ class MysteryTile extends BaseTile {
     static draw(cell) {
         ctx.drawImage(
             MysteryTile.tileImage,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
+        )
+    }
+
+    static drawPreview(index, width, height) {
+        ctx.drawImage(
+            MysteryTile.tileImage,
+            0,
+            0,
+            width,
+            height
         )
     }
 }

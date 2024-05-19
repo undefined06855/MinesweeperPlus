@@ -46,4 +46,28 @@ class TileManager {
 
         return id
     }
+
+    getTileIDForTitle() {
+        let id
+
+        if (Math.random() < 0.2) {
+            do {
+                id = this.getRandomBombTileID()
+            } while (!this.getTile(id).appearsInTitle)
+        } else {
+            do {
+                id = this.getRandomNonBombTileID()
+            } while (!this.getTile(id).appearsInTitle)
+        }
+
+        return id
+    }
+
+    getNonBombCount() {
+        return this.tiles.filter(obj => !obj.isMine).length
+    }
+    
+    getMineCount() {
+        return this.tiles.filter(obj => obj.isMine).length
+    }
 }

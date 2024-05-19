@@ -1,4 +1,6 @@
 class MineTile extends BaseMineTile {
+    static name = "normal mine"
+    static description = [ "A normal mine, does what you expect.", "Click leads to kablooey, you know." ]
     static async load() {
         return new Promise(resolve => {
             Utils.tileLoadImageAssets("MineTile", ["mine.png", "mine-reveal.png"])
@@ -16,8 +18,8 @@ class MineTile extends BaseMineTile {
     static drawExploded(cell) {
         ctx.drawImage(
             MineTile.mineExplodedImage,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
         )
@@ -29,10 +31,25 @@ class MineTile extends BaseMineTile {
     static draw(cell) {
         ctx.drawImage(
             MineTile.mineImage,
-            cell.col * sweeper.tileSize,
-            cell.row * sweeper.tileSize,
+            0,
+            0,
             sweeper.tileSize,
             sweeper.tileSize
+        )
+    }
+
+    /**
+     * @param {number} index 
+     * @param {number} width 
+     * @param {number} height 
+     */
+    static drawPreview(index, width, height) {
+        ctx.drawImage(
+            MineTile.mineImage,
+            0,
+            0,
+            width,
+            height
         )
     }
 }

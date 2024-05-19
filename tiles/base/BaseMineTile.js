@@ -7,7 +7,6 @@ class BaseMineTile extends BaseTile {
      * @param {Cell} cell 
      */
     static onUncovered(cell) {
-        console.debug("Bomb uncovered. Kablooey time")
         sweeper.kablooey()
     }
 
