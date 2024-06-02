@@ -37,6 +37,11 @@ class SetupScreen extends InitialisableClass {
         this.previewRotation = 0
 
         this.currentlySelectedTile = null
+
+        this.presetData.push(new SetupPresetData(69, 69, 1))
+        this.presetData.push(new SetupPresetData(69, 69, 1))
+        this.presetData.push(new SetupPresetData(69, 69, 1))
+        this.presetData.push(new SetupPresetData(69, 69, 1))
     }
 
     init() {
@@ -46,13 +51,13 @@ class SetupScreen extends InitialisableClass {
         // right
         EventHandler.registerButton(1160 - arrowButtonWidth/2, 155 - arrowButtonHeight/2, arrowButtonWidth, arrowButtonHeight, () => {
             this.preset++
-            if (this.preset > 3) this.preset = 0
+            if (this.preset > this.presetData.length - 1) this.preset = 0
         })
 
         // left
         EventHandler.registerButton(760 - arrowButtonWidth/2, 155 - arrowButtonHeight/2, arrowButtonWidth, arrowButtonHeight, () => {
             this.preset--
-            if (this.preset < 0) this.preset = 3
+            if (this.preset < 0) this.preset = this.presetData.length - 1
         })
 
         // start
@@ -67,6 +72,7 @@ class SetupScreen extends InitialisableClass {
         // register buttons for mines and tiles (basically a copy of drawing without the drawing)
         let mineYPos = 0
         let tileYPos = 0
+        ctx.font = Fonter.get(FontFamily.Righteous, 30) // so ctx.meaureText is correct
         for (let tile of tileManager.tiles) {
             let x, y
             if (tile.isMine) {
@@ -79,11 +85,11 @@ class SetupScreen extends InitialisableClass {
                 tileYPos++
             }
 
-            let buttonX = x - (ctx.measureText(tile.name).width / 2) - 60
+            let buttonX = x - (ctx.measureText(tile.name).width / 2) - 30
             let buttonY = y - 12
 
             // and register buttons
-            EventHandler.registerButton(buttonX, buttonY, ctx.measureText(tile.name).width + 90, 24, () => {
+            EventHandler.registerButton(buttonX, buttonY, ctx.measureText(tile.name).width + 30, 24, () => {
                 this.currentlySelectedTile = tile
                 this.overlayShowing = true
 
@@ -204,7 +210,7 @@ class SetupScreen extends InitialisableClass {
         ctx.rotate(-this.arrowRot)
         ctx.translate(-760, -160)
 
-        // GO!!!!!!!!!
+        // START!!!!!!!!!!!!!!!
         ctx.font = Fonter.get(FontFamily.Righteous, 60)
         ctx.translate(960, 960)
         ctx.save()
@@ -296,21 +302,25 @@ class SetupScreen extends InitialisableClass {
             ctx.strokeText(fixedName, 960, 200)
             ctx.fillText(fixedName, 960, 200)
  
-            let x = 480
-            let y = 390
-            let size = 300
+            // draw the icon twice, once blurred, once not
+            for (let i = 0; i < 2; i++) {
+                if (i == 0) ctx.filter = "blur(50px)"
+                let x = 480
+                let y = 390
+                let size = 300
+                ctx.translate(x + size/2, y + size/2)
+                ctx.rotate(this.previewRotation)
+                ctx.translate(-x - size/2, -y - size/2)
+                ctx.translate(x, y)
+                this.currentlySelectedTile.drawPreview(~~(this.previewAnimationTimer / 900), size, size)
+                ctx.translate(-x, -y)
+                ctx.translate(x + size/2, y + size/2)
+                ctx.rotate(-this.previewRotation)
+                ctx.translate(-x - size/2, -y - size/2)
+                ctx.filter = "none"
+            }
 
-            ctx.translate(x + size/2, y + size/2)
-            ctx.rotate(this.previewRotation)
-            ctx.translate(-x - size/2, -y - size/2)
 
-            ctx.translate(x, y)
-            this.currentlySelectedTile.drawPreview(~~(this.previewAnimationTimer / 900), size, size)
-            ctx.translate(-x, -y)
-
-            ctx.translate(x + size/2, y + size/2)
-            ctx.rotate(-this.previewRotation)
-            ctx.translate(-x - size/2, -y - size/2)
 
             ctx.font = Fonter.get(FontFamily.Righteous, 40)
             ctx.textAlign = "left"

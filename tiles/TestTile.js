@@ -16,7 +16,7 @@ class TestTile extends GenericTile {
         "",
         "that's crazy"
     ]
-    static generationChance = 0
+    static generationChance = 98063450983456
 
     /**
      * @param {Cell} cell 

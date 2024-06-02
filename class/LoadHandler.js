@@ -2,6 +2,9 @@ class LoadHandler {
     static isAllLoaded = false
 
     static async loadAll() {
+        console.log("LoadHandler: preClass")
+        ClassCreator.preClass()
+
         // load fonts (not really priority, so isn't factored into load time)
         for (let family of Object.values(FontFamily)) {
             ctx.font = Fonter.get(family, 69)
@@ -9,13 +12,16 @@ class LoadHandler {
         }
 
         console.log("LoadHandler: hookError")
-        await LoadHandler.hookError()
+        LoadHandler.hookError()
         console.log("LoadHandler: loadGlobalAssets")
         await LoadHandler.loadGlobalAssets()
         console.log("LoadHandler: registerTiles")
         await LoadHandler.registerTiles()
         console.log("LoadHandler: finished!")
         LoadHandler.isAllLoaded = true
+        
+        console.log("LoadHandler: postClass")
+        ClassCreator.postClass()
     }
 
     static async registerTiles() {

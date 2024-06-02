@@ -9,7 +9,7 @@ let GameState = {
 class GameHandler {
     static state = GameState.Loading
     static speedMultiplier = 1
-    static zoomOut = true
+    static zoomOut = false
 
     // everything here runs on startup
     static init() {
@@ -17,6 +17,8 @@ class GameHandler {
         ctx.textBaseline = "middle"
         ctx.textRendering = "optimizeLegibility"
         ctx.lineCap = "round"
+        ctx.miterLimit = 0.0001 // make everything a bevel (fixes "plus" text on the title, and just makes the title look nice)
+        ctx.lineJoin = "bevel"
 
         lastTime = performance.now()
         GameHandler.waitForLoadHandler()
@@ -25,16 +27,8 @@ class GameHandler {
 
     // runs parallel to `main`
     static waitForLoadHandler() {
-        if (LoadHandler.isAllLoaded) requestAnimationFrame(GameHandler.afterLoad)
+        if (LoadHandler.isAllLoaded) Transitioner.to(GameState.Title)
         else requestAnimationFrame(GameHandler.waitForLoadHandler)
-    }
-
-    static afterLoad() {
-        // classes here are created AFTER load
-        title = new Title()
-        setupScreen = new SetupScreen()
-
-        Transitioner.to(GameState.Title)
     }
 
     // Main game loop
@@ -73,6 +67,7 @@ class GameHandler {
                 sweeper.animations.forEach(anim => anim.preDraw())
                 sweeper.draw()
                 sweeper.animations.forEach(anim => anim.postDraw())
+                sweeper.drawUnanimated()
                 break
             default:
                 // probably shouldn't be hardcoded but whatever
@@ -87,7 +82,7 @@ class GameHandler {
         }
 
         Transitioner.draw()
-        // try { EventHandler.draw() } catch(_) {}
+        EventHandler.draw()
 
         if (GameHandler.zoomOut) {
             ctx.strokeStyle = "red"
