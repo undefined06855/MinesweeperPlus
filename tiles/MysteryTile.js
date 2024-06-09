@@ -1,6 +1,6 @@
 class MysteryTile extends BaseTile {
     static name = "mystery tile"
-    static description = [ "Mysterious! It doesn't tell you how many mines", "actually surrounds it." ]
+    static description = [ "Mysterious! It doesn't tell you how many mines", "actually surrounds it.", "", "(this is a very placeholder image)" ]
     static generationChance = 0.07
 
     static async load() {

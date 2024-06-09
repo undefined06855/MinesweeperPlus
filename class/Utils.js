@@ -98,11 +98,72 @@ class Utils {
     }
 
     /**
-     * @param {HTMLImageElement} image 
-     * @param {number} width 
-     * @param {number} height 
+     * @param {number} ms 
+     * @returns {Promise<undefined>}
      */
-    static create9Slice(image, width, height) {
+    static async wait(ms) {
+        return new Promise(resolve => {
+            setTimeout(resolve, ms)
+        })
+    }
 
+    /**
+     * @param {number} y 
+     * @param {string} [col="#ff0000"] 
+     */
+    static drawLineHoriz(y, col = "#ff0000") {
+        let origStrokeSize = ctx.lineWidth
+        let origStrokeCol = ctx.strokeStyle
+
+        ctx.lineWidth = 1
+        ctx.strokeStyle = col
+
+        ctx.beginPath()
+        ctx.moveTo(0, y)
+        ctx.lineTo(1920, y)
+        ctx.stroke()
+
+        ctx.strokeStyle = origStrokeCol
+        ctx.lineWidth = origStrokeSize
+    }
+
+    /**
+     * @param {number} x 
+     * @param {string} [col="#ff0000"] 
+     */
+    static drawLineVert(x, col = "#ff0000") {
+        let origStrokeSize = ctx.lineWidth
+        let origStrokeCol = ctx.strokeStyle
+
+        ctx.lineWidth = 1
+        ctx.strokeStyle = col
+
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.lineTo(x, 1080)
+        ctx.stroke()
+
+        ctx.strokeStyle = origStrokeCol
+        ctx.lineWidth = origStrokeSize
+    }
+
+    /**
+     * @param {string | number} char 
+     */
+    static getCounterSlice(char) {
+        char = char.toString()
+        // 1234567890-
+        let charWidth = 12
+        let charHeight = 23
+
+        let index = "1234567890-".indexOf(char)
+        if (index == -1) return {}
+
+        return {
+            x: charWidth * index,
+            y: 0,
+            width: charWidth,
+            height: charHeight
+        }
     }
 }

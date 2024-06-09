@@ -7,4 +7,8 @@ class GlobalAssets {
 
     static counterOuter = null
     static counter = null
+
+    static googIcons = {
+        tune: null
+    }
 }

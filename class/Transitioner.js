@@ -17,7 +17,7 @@ class Transitioner {
      * @param {number} [transitionType=Transition.CirclePinhole] 
      * @returns {boolean}
      */
-    static to(newGameState, transitionType = Transition.CirclePinhole, length = 800) {
+    static to(newGameState, transitionType = Transition.CirclePinhole, length = 700) {
         if (Transitioner.isTransitioning) return false
 
         console.log("Transition to %s", newGameState)

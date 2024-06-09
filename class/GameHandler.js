@@ -10,6 +10,8 @@ class GameHandler {
     static state = GameState.Loading
     static speedMultiplier = 1
     static zoomOut = false
+    static gt = 0 // global timer
+    static hasErrored = false
 
     // everything here runs on startup
     static init() {
@@ -17,9 +19,8 @@ class GameHandler {
         ctx.textBaseline = "middle"
         ctx.textRendering = "optimizeLegibility"
         ctx.lineCap = "round"
-        ctx.miterLimit = 0.0001 // make everything a bevel (fixes "plus" text on the title, and just makes the title look nice)
-        ctx.lineJoin = "bevel"
-
+        ctx.lineJoin = "round"
+        
         lastTime = performance.now()
         GameHandler.waitForLoadHandler()
         requestAnimationFrame(GameHandler.main)
@@ -33,6 +34,8 @@ class GameHandler {
 
     // Main game loop
     static main() {
+        if (GameHandler.hasErrored) return
+        // place after the zoom out to only clear shit inside the zoomed out area
         ctx.clearRect(0, 0, 1920, 1080)
 
         if (GameHandler.zoomOut) {
@@ -42,6 +45,8 @@ class GameHandler {
 
         dt = (performance.now() - lastTime) * GameHandler.speedMultiplier
         lastTime = performance.now()
+
+        GameHandler.gt += dt
 
         Transitioner.tick()
 
@@ -57,9 +62,13 @@ class GameHandler {
                 title.draw()
                 break
             case GameState.GameSetup:
+                // believe it or not, setupscreen does have animations! try to find them...
                 setupScreen.tryInit()
                 setupScreen.tick()
+                setupScreen.animations.forEach(anim => anim.tick())
+                setupScreen.animations.forEach(anim => anim.preDraw())
                 setupScreen.draw()
+                setupScreen.animations.forEach(anim => anim.postDraw())
                 break
             case GameState.Game:
                 sweeper.tryInit()
@@ -67,7 +76,7 @@ class GameHandler {
                 sweeper.animations.forEach(anim => anim.preDraw())
                 sweeper.draw()
                 sweeper.animations.forEach(anim => anim.postDraw())
-                sweeper.drawUnanimated()
+                sweeper.drawPostAnimations()
                 break
             default:
                 // probably shouldn't be hardcoded but whatever
@@ -82,7 +91,6 @@ class GameHandler {
         }
 
         Transitioner.draw()
-        EventHandler.draw()
 
         if (GameHandler.zoomOut) {
             ctx.strokeStyle = "red"
@@ -91,6 +99,8 @@ class GameHandler {
     
             ctx.resetTransform()
         }
+
+        OverlayDrawer.draw()
 
         requestAnimationFrame(GameHandler.main)
     }

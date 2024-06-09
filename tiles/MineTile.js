@@ -1,6 +1,12 @@
 class MineTile extends BaseMineTile {
     static name = "normal mine"
     static description = [ "A normal mine, does what you expect.", "Click leads to kablooey, you know." ]
+    
+    /** @type HTMLImageElement */
+    static mineImage = null
+
+    /** @type HTMLImageElement */
+    static mineExplodedImage = null
     static async load() {
         return new Promise(resolve => {
             Utils.tileLoadImageAssets("MineTile", ["mine.png", "mine-reveal.png"])

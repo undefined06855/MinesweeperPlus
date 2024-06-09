@@ -18,16 +18,17 @@ class Sweeper extends InitialisableClass {
         this.firstClick = true
         this.state = SweeperState.Playing
 
-        this.tileSize = 1080 / height
-        this.zoom = 1
-        this.offsetX = 0
-        this.offsetY = 0
+        this.tileSize = 60
+        this.offsetX = (1920 / 2) - (this.width * this.tileSize / 2)
+        this.offsetY = (1080 / 2) - (this.height * this.tileSize / 2)
 
         this.dragStartMouseX = 0
         this.dragStartMouseY = 0
         this.dragStartOffsetX = 0
         this.dragStartOffsetY = 0
         this.isDragging = false
+
+        this.gameOverAnimationTimer = 0
         
         this.createGrid()
     }
@@ -36,73 +37,9 @@ class Sweeper extends InitialisableClass {
         // detect and register buttons for right and left click
         EventHandler.registerButton(0, 0, 1920, 1080, (x, y) => this.onClick(x, y), true)
         EventHandler.registerButton(0, 0, 1920, 1080, (x, y) => this.onFlag(x, y), true, 2)
-
-        // and the dragging
         
-        EventHandler.registerMouseMove(
-            0, 0, 1920, 1080,
-            
-            /**
-             * @param {number} x 
-             * @param {number} y 
-             * @param {MouseEvent} event 
-             */
-            (x, y, event) => {
-                if (event.buttons == 4 || (event.shiftKey && event.buttons == 1)) {
-                    if (!this.isDragging) {
-                        // started dragging
-                        this.dragStartMouseX = x
-                        this.dragStartMouseY = y
-                        this.dragStartOffsetX = this.offsetX
-                        this.dragStartOffsetY = this.offsetY
-                        console.log("started drag")
-                    } else {
-                        // continue dragging
-                        this.offsetX = (x - this.dragStartMouseX) + this.dragStartOffsetX 
-                        this.offsetY = (y - this.dragStartMouseY) + this.dragStartOffsetY 
-                    }
-
-                    this.isDragging = true
-                } else {
-                    this.isDragging = false
-                }
-            }
-        )
-
-        EventHandler.registerScroll(
-            0, 0, 1920, 1080,
-
-            /**
-             * @param {number} x
-             * @param {number} y
-             * @param {WheelEvent} event
-             */
-            (x, y, event) => {
-                let min = 5
-                let max = 7
-
-                if (event.deltaY < 0) {
-                    this.zoom *= 1.25
-
-                    if (this.zoom > 1.25 ** max) {
-                        this.zoom = 1.25 ** max
-                        this.animations.push(new Anim(AnimType.Shake, 10, 230, this.animations))
-                        return
-                    }
-                } else {
-                    this.zoom /= 1.25
-
-                    if (this.zoom < 1 / (1.25 ** min)) {
-                        this.zoom = 1 / (1.25 ** min)
-                        this.animations.push(new Anim(AnimType.Shake, 10, 230, this.animations))
-                        return
-                    }
-                }
-
-                this.offsetX += x * (1 - this.zoom)
-                this.offsetY += y * (1 - this.zoom)
-            }
-        )
+        // and the dragging and scrolling
+        EventHandler.registerMouseMove(0, 0, 1920, 1080, (x, y, event) => this.onMouseMove(x, y, event))
     }
 
     createGrid() {
@@ -119,6 +56,12 @@ class Sweeper extends InitialisableClass {
         for (let i = 0; i < this.mines; i++) {
             let row = ~~(Math.random() * this.grid.length)
             let col = ~~(Math.random() * this.grid[row].length)
+            if (tileManager.getTile(this.grid[row][col].id).isMine) {
+                // "skip" this current iteration if mine already present
+                console.log("mine present")
+                i++
+                continue
+            }
             this.grid[row][col] = new Cell(tileManager.getRandomBombTileID(), row, col)
         }
     }
@@ -137,15 +80,28 @@ class Sweeper extends InitialisableClass {
         ctx.fillStyle = "#ffffff"
         ctx.fillRect(0, 0, 1920, 1080)
 
-        let origTileSize = this.tileSize
-        this.tileSize *= this.zoom
+__HIPERFORMANCE(() => {
+        // draw shadow
+        ctx.filter = "blur(60px)"
+        ctx.fillStyle = "#00000096"
+        ctx.fillRect(this.offsetX, this.offsetY, this.tileSize * this.grid[0].length, this.tileSize * this.grid.length)
+        ctx.filter = "none"
+})
 
         for (let row = 0; row < this.grid.length; row++) {
             for (let col = 0; col < this.grid[row].length; col++) {
                 let cell = this.grid[row][col]
                 let tile = tileManager.getTile(cell.id)
 
-                ctx.translate(cell.col * this.tileSize + this.offsetX, cell.row * this.tileSize + this.offsetY)
+                let x = cell.col * this.tileSize + this.offsetX
+                let y = cell.row * this.tileSize + this.offsetY
+
+                if (x > 1920 + tile.cullMargin) continue
+                if (y > 1080 + tile.cullMargin) continue
+                if (x < -this.tileSize - tile.cullMargin) continue
+                if (y < -this.tileSize - tile.cullMargin) continue
+
+                ctx.translate(x, y)
  
                 switch(cell.state) {
                     case CellState.Uncovered:
@@ -180,15 +136,16 @@ class Sweeper extends InitialisableClass {
                 }
 
                 // if i use reset here animations wont work
-                ctx.translate(-cell.col * this.tileSize - this.offsetX, -cell.row * this.tileSize - this.offsetY)
+                ctx.translate(-x, -y)
 
             }
         }
 
-        this.tileSize = origTileSize
+        // draw ui
+
     }
 
-    drawUnanimated() {
+    drawPostAnimations() {
         ctx.lineWidth = 10
 
         ctx.textAlign = "left"
@@ -257,12 +214,35 @@ class Sweeper extends InitialisableClass {
         this.animations.push(new Anim(AnimType.Shake, 24, 370, this.animations))
     }
 
+    checkGameComplete() {
+        // loop through all tiles and see if all tiles are revealed or mines
+        for (let row = 0; row < this.grid.length; row++) {
+            for (let col = 0; col < this.grid[row].length; col++) {
+                let tile = this.grid[row][col]
+                if (tileManager.getTile(tile.id).isMine || tile.state == CellState.Uncovered) {
+                    continue
+                }
+
+                // else you failed >:(
+                console.log("not all uncovered yet")
+                return
+            }
+        }
+
+        console.log("well done!!!!!")
+        alert("uhhh well done! you did it ig make sure to add a well done screen or something")
+    }
+
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     */
     onClick(x, y) {
         x -= this.offsetX
         y -= this.offsetY
 
-        let col = ~~(x / (this.tileSize * this.zoom))
-        let row = ~~(y / (this.tileSize * this.zoom))
+        let col = ~~(x / this.tileSize)
+        let row = ~~(y / this.tileSize)
 
         if (col >= this.width) return
         if (row >= this.height) return
@@ -285,14 +265,19 @@ class Sweeper extends InitialisableClass {
         this.firstClick = false
 
         this.click(row, col)
+        this.checkGameComplete()
     }
 
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     */
     onFlag(x, y) {
         x -= this.offsetX
         y -= this.offsetY
 
-        let col = ~~(x / (this.tileSize * this.zoom))
-        let row = ~~(y / (this.tileSize * this.zoom))
+        let col = ~~(x / this.tileSize)
+        let row = ~~(y / this.tileSize)
 
         if (col >= this.width) return
         if (row >= this.height) return
@@ -301,6 +286,32 @@ class Sweeper extends InitialisableClass {
         if (this.state != SweeperState.Playing) return
 
         this.flag(row, col)
+        this.checkGameComplete()
+    }
+
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     * @param {MouseEvent} event 
+     */
+    onMouseMove(x, y, event) {
+        if (event.buttons == 4 || (event.shiftKey && event.buttons == 1)) {
+            if (!this.isDragging) {
+                // started dragging
+                this.dragStartMouseX = x
+                this.dragStartMouseY = y
+                this.dragStartOffsetX = this.offsetX
+                this.dragStartOffsetY = this.offsetY
+            } else {
+                // continue dragging
+                this.offsetX = (x - this.dragStartMouseX) + this.dragStartOffsetX 
+                this.offsetY = (y - this.dragStartMouseY) + this.dragStartOffsetY 
+            }
+
+            this.isDragging = true
+        } else {
+            this.isDragging = false
+        }
     }
 }
 

@@ -1,3 +1,42 @@
+class EventHandlerEvent {
+    /**
+     * @param {number} x 
+     * @param {number} y 
+     * @param {number} width 
+     * @param {number} height 
+     * @param {number} id 
+     * @param {Function} callback 
+     */
+    constructor(x, y, width, height, id, callback) {
+        this.x = x
+        this.y = y
+        this.width = width
+        this.height = height
+        this.id = id
+        this.callback = callback
+    }
+}
+
+class EventHandlerButtonEvent extends EventHandlerEvent {
+    constructor(x, y, width, height, id, callback, hidden, button) {
+        super(x, y, width, height, id, callback)
+        this.hidden = hidden
+        this.button = button
+    }
+}
+
+class EventHandlerMouseEvent extends EventHandlerEvent {
+    constructor(x, y, width, height, id, callback) {
+        super(x, y, width, height, id, callback)
+    }
+}
+
+class EventHandlerScrollEvent extends EventHandlerEvent {
+    constructor(x, y, width, height, id, callback) {
+        super(x, y, width, height, id, callback)
+    }
+}
+
 class EventHandler {
     /** @type Array<EventHandlerButtonEvent> */
     static buttons = []
@@ -75,36 +114,11 @@ class EventHandler {
         })
     }
 
-    static draw() {
-        // debug: draw all buttons
-        ctx.lineWidth = 2
-
-        ctx.textAlign = "left"
-        ctx.font = Fonter.get("monospace", 15)
-
-        ctx.fillStyle = "yellow"
-        for (let button of EventHandler.buttons) {
-            ctx.strokeStyle = button.hidden ? "red" : "blue"
-            ctx.strokeRect(button.x, button.y, button.width, button.height)
-            ctx.strokeText(`button ${button.id}`, button.x + 10, button.y + 20)
-            ctx.fillText(`button ${button.id}`, button.x + 10, button.y + 20)
-        }
-
-        ctx.strokeStyle = "purple"
-        for (let mouseMoveHandler of EventHandler.mouseMoveHandlers) {
-            ctx.strokeRect(mouseMoveHandler.x, mouseMoveHandler.y, mouseMoveHandler.width, mouseMoveHandler.height)
-            ctx.strokeText(`mouseMoveHandler ${mouseMoveHandler.id}`, mouseMoveHandler.x + 10, mouseMoveHandler.y + 40)
-            ctx.fillText(`mouseMoveHandler ${mouseMoveHandler.id}`, mouseMoveHandler.x + 10, mouseMoveHandler.y + 40)
-        }
-
-        ctx.strokeStyle = "orange"
-        for (let scrollHandler of EventHandler.scrollHandlers) {
-            ctx.strokeRect(scrollHandler.x, scrollHandler.y, scrollHandler.width, scrollHandler.height)
-            ctx.strokeText(`scrollHandler ${scrollHandler.id}`, scrollHandler.x + 10, scrollHandler.y + 60)
-            ctx.fillText(`scrollHandler ${scrollHandler.id}`, scrollHandler.x + 10, scrollHandler.y + 60)
-        }
-
-        ctx.textAlign = "center"
+    /**
+     * @param {number} id 
+     */
+    static clickButton(id) {
+        EventHandler.buttons[id - 1].callback()
     }
 
     /**

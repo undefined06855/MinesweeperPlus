@@ -6,6 +6,7 @@ class BaseTile {
     static appearsInTitle = true
     static name = "(unnamed tile)"
     static description = [ "(no description)" ]
+    static cullMargin = 0
 
     // this gets set by TileManager
     static mappedGenerationChance = null

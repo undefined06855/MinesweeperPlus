@@ -1,3 +1,18 @@
+class TitleTile {
+    /**
+     * @param {typeof BaseTile} tile 
+     * @param {number} index 
+     */
+    constructor(tile, index) {
+        this.tile = tile
+        this.index = index
+        this.animationState = {
+            tick: 0,
+            isAnimating: false
+        }
+    }
+}
+
 class Title extends InitialisableClass {
     constructor() {
         super()
@@ -9,10 +24,8 @@ class Title extends InitialisableClass {
         this.animationTimer = 0
         this.rawAnimationTimer = 0
 
-        /** @type Array<Array<typeof BaseTile>> */
+        /** @type Array<Array<TitleTile>> */
         this.tiles = []
-        /** @type Array<Array<number>> */
-        this.tileIndexes = []
 
         this.width = 40
         this.height = this.width * (9/16) + 1
@@ -37,22 +50,21 @@ class Title extends InitialisableClass {
 
     generateRow() {
         let col = []
-        let indexCol = []
         for (let i = 0; i < this.width; i++) {
             this.index++
             let tileIndex = tileManager.getTileIDForTitle()
-            col.push(tileManager.getTile(tileIndex))
-
-            indexCol.push(~~(Math.random() * 10_000))
+            col.push(new TitleTile(
+                tileManager.getTile(tileIndex),
+                ~~(Math.random() * 10_000)
+            ))
         }
 
         this.tiles.unshift(col)
-        this.tileIndexes.unshift(indexCol)
     }
 
     tick() {
-        this.y = Math.sin(performance.now() / 350) * 25
-        this.plusRotation = Math.sin(performance.now() / 500) * 0.15
+        this.y = Math.sin(GameHandler.gt / 350) * 25
+        this.plusRotation = Math.sin(GameHandler.gt / 500) * 0.15
         this.scrollY += dt / 40
 
         if (this.scrollY >= 0) {
@@ -61,8 +73,31 @@ class Title extends InitialisableClass {
             this.generateRow()
         }
 
+        if (Math.random() < 0.02 && this.animationTimer > 700) { // delay before bounces
+            // bounce!
+            // find random tile to bounce
+            let row = ~~(Math.random() * this.tiles.length)
+            let col = ~~(Math.random() * this.tiles[row].length)
+            let tile = this.tiles[row][col]
+            tile.animationState.isAnimating = true
+            tile.animationState.tick = 0
+        }
+
+        // tick bouncing
+        for (let row = 0; row < this.tiles.length; row++) {
+            for (let col = 0; col < this.tiles[row].length; col++) {
+                let tile = this.tiles[row][col]
+                if (!tile.animationState.isAnimating) continue
+                tile.animationState.tick++
+
+                if (tile.animationState.tick > 70) {
+                    tile.animationState.isAnimating = false
+                }
+            }
+        }
+
         this.rawAnimationTimer += dt
-        if (this.rawAnimationTimer > 200)
+        if (this.rawAnimationTimer > 200) // delay before everything appears
             this.animationTimer += dt
 
         // slowly make rotation / movement bigger and bigger
@@ -71,15 +106,48 @@ class Title extends InitialisableClass {
     
     draw() {
         // background
+        let lateRenderCallbacks = []
         for (let row = 0; row < this.tiles.length; row++) {
             for (let col = 0; col < this.tiles[row].length; col++) {
-                let tile = this.tiles[row][col]
-                let index = this.tileIndexes[row][col]
+                let titleTile = this.tiles[row][col]
 
-                ctx.translate(col * this.tileSize, row * this.tileSize + this.scrollY)
-                tile.drawPreview(index, this.tileSize, this.tileSize)
-                ctx.translate(-col * this.tileSize, -row * this.tileSize - this.scrollY)
+                let cx = col * this.tileSize + this.tileSize/2
+                let cy = row * this.tileSize + this.tileSize/2 + this.scrollY
+
+                let _this = this
+                function renderThatTileShit() {
+                    // https://www.desmos.com/calculator/vb1mp6wy9j
+                    let scaleFunction = x => 0 - ((x - 35) / 35)**4 + 2
+
+                    let scale = scaleFunction(titleTile.animationState.tick) * _this.movementMultiplier
+                    if (titleTile.animationState.isAnimating) {
+__HIPERFORMANCE(() => {
+                        ctx.filter = "drop-shadow(0px 0px 15px #000000)"
+})
+                        ctx.translate(cx, cy)
+                        ctx.scale(scale, scale)
+                        ctx.translate(-cx, -cy)
+                    }
+    
+                    ctx.translate(col * _this.tileSize, row * _this.tileSize + _this.scrollY)
+                    titleTile.tile.drawPreview(titleTile.index, _this.tileSize, _this.tileSize)
+                    ctx.translate(-col * _this.tileSize, -row * _this.tileSize - _this.scrollY)
+    
+                    if (titleTile.animationState.isAnimating) {
+                        ctx.translate(cx, cy)
+                        ctx.scale(1 / scale, 1 / scale)
+                        ctx.translate(-cx, -cy)
+                        ctx.filter = "none"
+                    }
+                }
+
+                if (titleTile.animationState.isAnimating) lateRenderCallbacks.push(renderThatTileShit)
+                else renderThatTileShit()
             }
+        }
+
+        for (let cb of lateRenderCallbacks) {
+            cb()
         }
 
         // title (too much code here for what it does :despair:)
