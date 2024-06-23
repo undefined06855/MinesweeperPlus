@@ -167,3 +167,13 @@ class Utils {
         }
     }
 }
+
+class Easing {
+    static easeInOut(x) {
+        return (Math.cos(Math.PI*(1-Math.max(Math.min(x, 1), 0))) + 1) / 2
+    }
+
+    static easeInOutQuad(x) {
+        return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
+    }
+}

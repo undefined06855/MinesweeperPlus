@@ -484,8 +484,17 @@ __LOPERFORMANCE(() => {
             // draw background to darken everything else
             ctx.fillStyle = "#000000be"
             ctx.fillRect(0, 0, 1920, 1080)
+
+__HIPERFORMANCE(() => {
+            // blur when in high performance
+            // https://stackoverflow.com/a/50711865/
+            ctx.filter = "blur(10px)"
+            ctx.drawImage(canvas, 0, 0, 1920, 1080)
+            ctx.filter = "none"
+})
         }
 
+        // draw tile info overlay
         if (this.tileInfoOverlayShowing) {
             // draw overlay
             ctx.fillStyle = "#000000"
@@ -528,7 +537,9 @@ __HIPERFORMANCE(() => {
             ctx.textAlign = "center"
         }
 
+        // draw custom setup overlay
         if (this.customOverlayShowing) {
+            // darken when in low performance
             ctx.fillStyle = "#000000"
             ctx.strokeStyle = "#ffffff"
             ctx.font = Fonter.get(FontFamily.Righteous, 60)

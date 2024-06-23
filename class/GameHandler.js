@@ -59,7 +59,10 @@ class GameHandler {
             case GameState.Title:
                 title.tryInit()
                 title.tick()
+                title.animations.forEach(anim => anim.tick())
+                title.animations.forEach(anim => anim.preDraw())
                 title.draw()
+                title.animations.forEach(anim => anim.postDraw())
                 break
             case GameState.GameSetup:
                 // believe it or not, setupscreen does have animations! try to find them...
@@ -72,6 +75,7 @@ class GameHandler {
                 break
             case GameState.Game:
                 sweeper.tryInit()
+                sweeper.tick()
                 sweeper.animations.forEach(anim => anim.tick())
                 sweeper.animations.forEach(anim => anim.preDraw())
                 sweeper.draw()

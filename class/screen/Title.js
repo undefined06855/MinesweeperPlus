@@ -17,6 +17,11 @@ class Title extends InitialisableClass {
     constructor() {
         super()
 
+        /** @type Array<Anim> */
+        this.animations = []
+
+        this.hasShakenForTitle = false
+
         this.y = 0
         this.scrollY = 0
         this.plusRotation = 0
@@ -76,24 +81,30 @@ class Title extends InitialisableClass {
         if (Math.random() < 0.02 && this.animationTimer > 700) { // delay before bounces
             // bounce!
             // find random tile to bounce
-            let row = ~~(Math.random() * this.tiles.length)
-            let col = ~~(Math.random() * this.tiles[row].length)
+            let row = ~~(Math.random() * this.height)
+            let col = ~~(Math.random() * this.width)
             let tile = this.tiles[row][col]
             tile.animationState.isAnimating = true
             tile.animationState.tick = 0
         }
 
         // tick bouncing
-        for (let row = 0; row < this.tiles.length; row++) {
-            for (let col = 0; col < this.tiles[row].length; col++) {
+        for (let row = 0; row < this.height; row++) {
+            for (let col = 0; col < this.width; col++) {
                 let tile = this.tiles[row][col]
                 if (!tile.animationState.isAnimating) continue
-                tile.animationState.tick++
+                tile.animationState.tick += dt
 
-                if (tile.animationState.tick > 70) {
+                if (tile.animationState.tick > 1000) {
                     tile.animationState.isAnimating = false
                 }
             }
+        }
+
+        if (this.animationTimer >= 500 && !this.hasShakenForTitle) {
+            // shake!
+            this.animations.push(new Anim(AnimType.Shake, 15, 200, this.animations))
+            this.hasShakenForTitle = true
         }
 
         this.rawAnimationTimer += dt
@@ -107,8 +118,8 @@ class Title extends InitialisableClass {
     draw() {
         // background
         let lateRenderCallbacks = []
-        for (let row = 0; row < this.tiles.length; row++) {
-            for (let col = 0; col < this.tiles[row].length; col++) {
+        for (let row = 0; row < this.height; row++) {
+            for (let col = 0; col < this.width; col++) {
                 let titleTile = this.tiles[row][col]
 
                 let cx = col * this.tileSize + this.tileSize/2
@@ -116,8 +127,8 @@ class Title extends InitialisableClass {
 
                 let _this = this
                 function renderThatTileShit() {
-                    // https://www.desmos.com/calculator/vb1mp6wy9j
-                    let scaleFunction = x => 0 - ((x - 35) / 35)**4 + 2
+                    // https://www.desmos.com/calculator/fynmmcckrv
+                    let scaleFunction = x => 0 - ((x - 500) / 500)**2 + 2
 
                     let scale = scaleFunction(titleTile.animationState.tick) * _this.movementMultiplier
                     if (titleTile.animationState.isAnimating) {

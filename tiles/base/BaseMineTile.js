@@ -4,14 +4,16 @@ class BaseMineTile extends BaseTile {
     static disableAutoReveal = true
 
     /**
-     * @param {Cell} cell 
+     * Runs when the tile gets uncovered - fallback provided
+     * @param {Cell} cell The cell object that is linked to this instance
      */
     static onUncovered(cell) {
         sweeper.kablooey()
     }
 
     /**
-     * @param {Cell} cell 
+     * Runs when the tile needs to be drawn exploded when the player clicks on it at the end of the game
+     * @param {Cell} cell The cell object that is linked to this instance
      */
     static drawExploded(cell) {
         

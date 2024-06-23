@@ -72,22 +72,25 @@ class EventHandler {
         document.body.addEventListener("contextmenu", sharedClickHandler)
     
         // change cursor over buttons
-        document.body.addEventListener("mousemove", event => {
-            let rect = canvas.getBoundingClientRect()
-            let x = (event.clientX - rect.left) * canvas.width / rect.width
-            let y = (event.clientY - rect.top) *  canvas.height / rect.height
-            
-            let hovering = false
-            for (let button of EventHandler.buttons.slice().reverse()) {
-                if (button.x < x && button.x + button.width > x && button.y < y && button.y + button.height > y) {
-                    // yup
-                    if (!button.hidden) hovering = true
-                    break
+        for (let eventType of ["mousemove", "mousedown", "mouseup"]) {
+            document.body.addEventListener(eventType, event => {
+                let rect = canvas.getBoundingClientRect()
+                let x = (event.clientX - rect.left) * canvas.width / rect.width
+                let y = (event.clientY - rect.top) *  canvas.height / rect.height
+                
+                let hovering = false
+                for (let button of EventHandler.buttons.slice().reverse()) {
+                    if (button.x < x && button.x + button.width > x && button.y < y && button.y + button.height > y) {
+                        // yup
+                        if (!button.hidden) hovering = true
+                        break
+                    }
                 }
-            }
+    
+                canvas.style.cursor = hovering ? "pointer" : "default"
+            })
+        }
 
-            canvas.style.cursor = hovering ? "pointer" : "default"
-        })
 
         document.body.addEventListener("mousemove", event => {
             let rect = canvas.getBoundingClientRect()
