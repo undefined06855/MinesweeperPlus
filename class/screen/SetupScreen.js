@@ -16,7 +16,7 @@ class SetupScreen extends InitialisableClass {
         this.customOverlayShowing = false
 
         this.presetData = [
-            new SetupPresetData(2, 2, 3),
+            new SetupPresetData(9, 9, 10),
             new SetupPresetData(9, 9, 10),
             new SetupPresetData(16, 16, 40),
             new SetupPresetData(30, 16, 99)

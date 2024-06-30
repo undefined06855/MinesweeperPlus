@@ -163,7 +163,7 @@ __HIPERFORMANCE(() => {
 
         // title (too much code here for what it does :despair:)
         ctx.fillStyle = "#000000"
-        ctx.strokeStyle = "#ffffff"
+        ctx.strokeStyle = "#000000"
         ctx.lineWidth = 15
         ctx.font = Fonter.get(FontFamily.Righteous, 120)
         let length = 500
@@ -178,6 +178,13 @@ __HIPERFORMANCE(() => {
             ctx.rotate(rotationAnimationFunction(this.animationTimer) * (Math.PI / 180))
             ctx.translate(-960, -270)
         }
+        ctx.filter = "blur(10px)"
+        ctx.globalAlpha *= 0.6
+        ctx.strokeText("MINESWEEPER", 960, 270)
+        ctx.fillText("MINESWEEPER", 960, 270)
+        ctx.filter = "none"
+        ctx.globalAlpha /= 0.6
+        ctx.strokeStyle = "#ffffff"
         ctx.strokeText("MINESWEEPER", 960, 270)
         ctx.fillText("MINESWEEPER", 960, 270)
         if (this.animationTimer < length) {
@@ -187,7 +194,6 @@ __HIPERFORMANCE(() => {
             ctx.translate(-960, -270)
             ctx.globalAlpha = 1
         }
-
 
         ctx.lineWidth = 7
         ctx.font = Fonter.get(FontFamily.RockSalt, 30)
@@ -211,6 +217,14 @@ __HIPERFORMANCE(() => {
         ctx.globalAlpha = everythingElseAlphaAnimationFunction(this.animationTimer)
 
         ctx.font = Fonter.get(FontFamily.Righteous, 50)
+        ctx.filter = "blur(5px)"
+        ctx.strokeStyle = "#000000"
+        ctx.globalAlpha *= 0.6
+        ctx.strokeText("click to play", 960, 500 + this.y * this.movementMultiplier)
+        ctx.fillText("click to play", 960, 500 + this.y * this.movementMultiplier)
+        ctx.filter = "none"
+        ctx.globalAlpha /= 0.6
+        ctx.strokeStyle = "#ffffff"
         ctx.strokeText("click to play", 960, 500 + this.y * this.movementMultiplier)
         ctx.fillText("click to play", 960, 500 + this.y * this.movementMultiplier)
 
