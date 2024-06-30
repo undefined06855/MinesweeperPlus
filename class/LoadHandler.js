@@ -2,6 +2,12 @@ class LoadHandler {
     static isAllLoaded = false
 
     static async loadAll() {
+        console.log("LoadHandler: hookError")
+        LoadHandler.hookError()
+
+        console.log("LoadHandler: checkVitalClasses")
+        LoadHandler.checkVitalClasses()
+
         console.log("LoadHandler: preClass")
         ClassCreator.preClass()
 
@@ -11,8 +17,6 @@ class LoadHandler {
             ctx.fillText("", 0, 0)
         }
 
-        console.log("LoadHandler: hookError")
-        LoadHandler.hookError()
         console.log("LoadHandler: loadFonts")
         await LoadHandler.loadFonts()
         console.log("LoadHandler: loadGlobalAssets")
@@ -87,6 +91,41 @@ class LoadHandler {
 
             waitTick()
         })
+    }
+
+    static checkVitalClasses() {
+        try {[
+            LoadingScreen,
+            SetupScreen,
+            Sweeper,
+            Title,
+            Anim,
+            Cell,
+            ClassCreator,
+            EventHandler,
+            Fonter,
+            GameHandler,
+            GlobalAssets,
+            InitialisableClass,
+            LoadHandler,
+            LowPerformanceMode,
+            OverlayDrawer,
+            SetupPresetData,
+            TileManager,
+            Transitioner,
+            Utils,
+            BaseMineTile,
+            BaseTile,
+        ]} catch(error) {
+            // uh oh
+            setTimeout(() => {
+                window.location.reload()
+            }, 500)
+
+            let className = error.toString().split(": ")[1].split(" is")[0]
+
+            throw new Error(`Class ${className} not found! Reloading to try to fix issue...`)
+        }
     }
 
     static hookError() {

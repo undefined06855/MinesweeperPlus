@@ -8,8 +8,7 @@ let GameState = {
 
 class GameHandler {
     static state = GameState.Loading
-    static speedMultiplier = 1
-    static zoomOut = false
+    // static speedMultiplier = 1
     static gt = 0 // global timer
     static hasErrored = false
 
@@ -38,12 +37,12 @@ class GameHandler {
         // place after the zoom out to only clear shit inside the zoomed out area
         ctx.clearRect(0, 0, 1920, 1080)
 
-        if (GameHandler.zoomOut) {
+        if (OverlayDrawer.flags.debug) {
             ctx.scale(0.5, 0.5)
             ctx.translate(960, 540)
         }
 
-        dt = (performance.now() - lastTime) * GameHandler.speedMultiplier
+        dt = (performance.now() - lastTime)// * GameHandler.speedMultiplier
         lastTime = performance.now()
 
         GameHandler.gt += dt
@@ -52,9 +51,12 @@ class GameHandler {
 
         switch(GameHandler.state) {
             case GameState.Loading:
-                loadingScreen.tryInit()
-                loadingScreen.tick()
-                loadingScreen.draw()
+                // if there was an error with loading these would fail
+                try {
+                    loadingScreen.tryInit()
+                    loadingScreen.tick()
+                    loadingScreen.draw()
+                } catch(_) {}
                 break
             case GameState.Title:
                 title.tryInit()
@@ -96,7 +98,7 @@ class GameHandler {
 
         Transitioner.draw()
 
-        if (GameHandler.zoomOut) {
+        if (OverlayDrawer.flags.debug) {
             ctx.strokeStyle = "red"
             ctx.lineWidth = 8
             ctx.strokeRect(0, 0, 1920, 1080)
