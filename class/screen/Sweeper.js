@@ -34,6 +34,10 @@ class Sweeper extends InitialisableClass {
 
         this.gameOverAnimationTimer = 0
         this.hasPlayedGameOverShake = false
+        this.hasAddedGameOverButtons = false
+        /** @type Array<number> */
+        this.gameOverButtonIDS = []
+        this.spectateAnimationTimer = 0
 
         // these update at the end
         this.tilesUncovered = 0
@@ -42,6 +46,9 @@ class Sweeper extends InitialisableClass {
 
         /** @type typeof BaseTile */
         this.tileJustClicked = null
+
+        this.startTime = 0
+        this.timeTaken = 0
         
         this.createGrid()
     }
@@ -72,7 +79,7 @@ class Sweeper extends InitialisableClass {
             if (tileManager.getTile(this.grid[row][col].id).isMine) {
                 // "skip" this current iteration if mine already present
                 console.log("mine present")
-                i++
+                i--
                 continue
             }
             this.grid[row][col] = new Cell(tileManager.getRandomBombTileID(), row, col)
@@ -90,20 +97,58 @@ class Sweeper extends InitialisableClass {
     }
 
     tick() {
+        // instakill for testing
+        // if (this.state == SweeperState.Playing) {
+        //     this.tileJustClicked = BaseTile
+        //     this.kablooey()
+        // }
+
         if (this.state != SweeperState.Playing) {
             this.gameOverAnimationTimer += dt
 
-            let easedProgress = Easing.easeInOut(this.gameOverAnimationTimer / 2000)
+            if (this.state != SweeperState.Spectating) {
+                let easedProgress = Easing.easeInOut(this.gameOverAnimationTimer / 2000)
 
-            // and slowly zoom out and move camera back to middle (and reset zoom)
-            this.offsetX = this.offsetXBeforeAnimation + easedProgress * (this.origOffsetX - this.offsetXBeforeAnimation)
-            this.offsetY = this.offsetYBeforeAnimation + easedProgress * (this.origOffsetY - this.offsetYBeforeAnimation)
+                // and slowly zoom out and move camera back to middle (and reset zoom)
+                this.offsetX = this.offsetXBeforeAnimation + easedProgress * (this.origOffsetX - this.offsetXBeforeAnimation)
+                this.offsetY = this.offsetYBeforeAnimation + easedProgress * (this.origOffsetY - this.offsetYBeforeAnimation)
+            }
 
             if (this.gameOverAnimationTimer >= 1700 && !this.hasPlayedGameOverShake) {
                 // shake when the title hits the screen
                 this.animations.push(new Anim(AnimType.Shake, 24, 500, this.animations))
                 this.hasPlayedGameOverShake = true
             }
+
+            let width = 200
+            if (this.gameOverAnimationTimer >= 4700 && !this.hasAddedGameOverButtons) {
+                this.gameOverButtonIDS.push(EventHandler.registerButton(960 - width/2, 800, width, 50, () => {
+                    console.log("continue")
+                    EventHandler.unregisterAllButtons()
+                    EventHandler.unregisterAllMouseMoves()
+                    Transitioner.to(GameState.GameSetup)
+                }))
+
+                this.gameOverButtonIDS.push(EventHandler.registerButton(960 - width/2, 860, width, 50, () => {
+                    this.state = SweeperState.Spectating
+                    for (let button of this.gameOverButtonIDS) {
+                        EventHandler.unregisterButton(button)
+                    }
+
+                    EventHandler.registerButton(1670, 1000, 240, 60, () => {
+                        console.log("continue")
+                        EventHandler.unregisterAllButtons()
+                        EventHandler.unregisterAllMouseMoves()
+                        Transitioner.to(GameState.GameSetup)
+                    })
+                }))
+
+                this.hasAddedGameOverButtons = true
+            }
+        }
+
+        if (this.state == SweeperState.Spectating) {
+            this.spectateAnimationTimer += dt
         }
     }
 
@@ -148,18 +193,17 @@ __HIPERFORMANCE(() => {
                     // flagged are just flagged
                     case CellState.Flagged:
                         // if it's not a mine and flagged it's wrong
-                        if (this.state == SweeperState.Exploded && !tile.isMine)
+                        if ((this.state == SweeperState.Exploded || this.state == SweeperState.Spectating) && !tile.isMine)
                             tile.drawFlaggedWrong(cell)
                         else tile.drawFlagged(cell)
                         break
                     case CellState.Covered:
                         // if we;ve exploded, just draw all the mines even if
                         // they're covered
-                        if (tile.isMine && this.state == SweeperState.Exploded)
+                        if (tile.isMine && (this.state == SweeperState.Exploded || this.state == SweeperState.Spectating))
                             tile.draw(cell)
                         // else just draw normally
                         else tile.drawCovered(cell)
-                        
                         break
                     
                     default:
@@ -184,11 +228,16 @@ __HIPERFORMANCE(() => {
             
         // draw end screen
         if (this.state != SweeperState.Playing) {
+            let eased = Easing.easeInOut(this.spectateAnimationTimer / 700)
+            let translateY = -eased * 1080
+
             // draw overlay to darken everything
-            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 500) / 1000
+            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 500) / 1000 * (1 - eased)
 
             ctx.fillStyle = "#050505a6"
             ctx.fillRect(0, 0, 1920, 1080)
+
+            ctx.translate(0, translateY)
 
             ctx.globalAlpha = 1
 
@@ -218,8 +267,14 @@ __HIPERFORMANCE(() => {
                 ctx.translate(-960, -130)
             }
             ctx.translate(0, titleWobbleY)
-            ctx.strokeText("GAME OVER", 960, 130)
-            ctx.fillText("GAME OVER", 960, 130)
+            if (this.state == SweeperState.Exploded) {
+                ctx.strokeText("GAME OVER!", 960, 130)
+                ctx.fillText("GAME OVER!", 960, 130)
+            } else {
+                ctx.strokeText("GAME COMPLETE", 960, 130)
+                ctx.fillText("GAME COMPLETE", 960, 130)
+            }
+
             ctx.translate(0, -titleWobbleY)
             if (gameOverCaptionTimer < length) {
                 ctx.translate(960, 130)
@@ -235,59 +290,98 @@ __HIPERFORMANCE(() => {
 
             ctx.lineWidth = 7
             ctx.font = Fonter.get(FontFamily.Righteous, 40)
+            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 2000) / 700
 
-            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 2000) / 700 
-            ctx.strokeText("you hit a mine!", 960, 270)
-            ctx.fillText("you hit a mine!", 960, 270)
+            if (this.state == SweeperState.Exploded) {
+                ctx.strokeText("you hit a mine!", 960, 270)
+                ctx.fillText("you hit a mine!", 960, 270)
+    
+                // figure out where the center of the "mine" part is
+                let youHitAMineWidth = ctx.measureText("you hit a mine!").width
+                let mineWidth = ctx.measureText("mine").width
+                let exclamationMarkWidth = ctx.measureText("!").width
+                let mineCenter = youHitAMineWidth - exclamationMarkWidth - mineWidth/2 + 960 - youHitAMineWidth/2
+    
+                // and draw the type of mine
+                ctx.font = Fonter.get(FontFamily.Righteous, 12)
+                ctx.lineWidth = 3
+                ctx.strokeText(`(${this.tileJustClicked.name})`, mineCenter, 295)
+                ctx.fillText(`(${this.tileJustClicked.name})`, mineCenter, 295)
+            } else {
+                ctx.strokeText(`time taken: ${Utils.getTimeString(this.timeTaken)}`, 960, 270)
+                ctx.fillText(`time taken: ${Utils.getTimeString(this.timeTaken)}`, 960, 270)
+            }
 
-            // figure out where the center of the "mine" part is
-            let youHitAMineWidth = ctx.measureText("you hit a mine!").width
-            let mineWidth = ctx.measureText("mine").width
-            let exclamationMarkWidth = ctx.measureText("!").width
-            let mineCenter = youHitAMineWidth - exclamationMarkWidth - mineWidth/2 + 960 - youHitAMineWidth/2
-
-            // and draw the type of mine
-            ctx.font = Fonter.get(FontFamily.Righteous, 12)
-            ctx.lineWidth = 3
-            ctx.strokeText(`(${this.tileJustClicked.name})`, mineCenter, 295)
-            ctx.fillText(`(${this.tileJustClicked.name})`, mineCenter, 295)
 
             // and draw other info...
             // this.tilesUncovered
             // this.minesCorrectlyFlagged
             // this.tilesIncorrectlyFlagged
-            let gap = 20 / 2
+            let gap = 240
+            let left = 960 - gap
+            let right = 960 + gap
             ctx.font = Fonter.get(FontFamily.Righteous, 35)
             ctx.lineWidth = 7
 
+            let infoY = 450
+
+            let padX = 40
+            let padY = 50
+            ctx.fillStyle = "#464646ff"
+            ctx.beginPath()
+            ctx.roundRect(left - padX, infoY - padY, right - left + padX*2, 90 + padY*2, 30)
+            ctx.fill()
+
+            ctx.fillStyle = "#000000"
+
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 2800) / 700
-            ctx.textAlign = "right"
-            ctx.strokeText("Tiles uncovered:", 960 - gap, 400)
-            ctx.fillText("Tiles uncovered:", 960 - gap, 400)
             ctx.textAlign = "left"
+            ctx.strokeText("Tiles uncovered:", left, infoY)
+            ctx.fillText("Tiles uncovered:", left, infoY)
+            ctx.textAlign = "right"
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 3400) / 700
-            ctx.strokeText(this.tilesUncovered, 960 + gap, 400)
-            ctx.fillText(this.tilesUncovered, 960 + gap, 400)
+            ctx.strokeText(this.tilesUncovered, right, infoY)
+            ctx.fillText(this.tilesUncovered, right, infoY)
 
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 3000) / 700
-            ctx.textAlign = "right"
-            ctx.strokeText("Mines correctly flagged:", 960 - gap, 445)
-            ctx.fillText("Mines correctly flagged:", 960 - gap, 445)
             ctx.textAlign = "left"
+            ctx.strokeText("Mines correctly flagged:", left, infoY+45)
+            ctx.fillText("Mines correctly flagged:", left, infoY+45)
+            ctx.textAlign = "right"
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 3600) / 700
-            ctx.strokeText(this.minesCorrectlyFlagged, 960 + gap, 445)
-            ctx.fillText(this.minesCorrectlyFlagged, 960 + gap, 445)
+            ctx.strokeText(this.minesCorrectlyFlagged, right, infoY+45)
+            ctx.fillText(this.minesCorrectlyFlagged, right, infoY+45)
 
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 3200) / 700
-            ctx.textAlign = "right"
-            ctx.strokeText("Tiles incorrectly flagged:", 960 - gap, 490)
-            ctx.fillText("Tiles incorrectly flagged:", 960 - gap, 490)
             ctx.textAlign = "left"
+            ctx.strokeText("Tiles incorrectly flagged:", left, infoY+90)
+            ctx.fillText("Tiles incorrectly flagged:", left, infoY+90)
+            ctx.textAlign = "right"
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 3800) / 700
-            ctx.strokeText(this.tilesIncorrectlyFlagged, 960 + gap, 490)
-            ctx.fillText(this.tilesIncorrectlyFlagged, 960 + gap, 490)
+            ctx.strokeText(this.tilesIncorrectlyFlagged, right, infoY+90)
+            ctx.fillText(this.tilesIncorrectlyFlagged, right, infoY+90)
+
 
             ctx.textAlign = "center"
+            ctx.font = Fonter.get(FontFamily.Righteous, 45)
+
+            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 4700) / 2000
+            ctx.strokeText("continue", 960, 830)
+            ctx.fillText("continue", 960, 830)
+
+            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 5100) / 2000
+            ctx.strokeText("spectate", 960, 890)
+            ctx.fillText("spectate", 960, 890)
+
+            ctx.translate(0, -translateY)
+
+            ctx.globalAlpha = Math.min(1, Math.max(0, this.spectateAnimationTimer - 1200) / 900)
+            ctx.filter = "blur(10px)"
+            ctx.fillText("continue", 1790, 1040)
+            ctx.filter = "none"
+            ctx.strokeText("continue", 1790, 1040)
+            ctx.fillText("continue", 1790, 1040)
+
             ctx.globalAlpha = 1
         }
     }
@@ -311,8 +405,6 @@ __HIPERFORMANCE(() => {
     }
 
     click(row, col) {
-        if (GameHandler.state != GameState.Game) return
-
         let cell = this.grid[row][col]
         // shouldnt be able to click if the cell has been uncovered
         if (cell.state == CellState.Uncovered) return
@@ -343,8 +435,6 @@ __HIPERFORMANCE(() => {
     }
 
     flag(row, col) {
-        if (GameHandler.state != GameState.Game) return
-
         let cell = this.grid[row][col]
         // shouldnt be able to flag / unflag if the cell has been uncovered
         if (cell.state == CellState.Uncovered) return
@@ -384,7 +474,7 @@ __HIPERFORMANCE(() => {
         }
 
         console.log("well done!!!!!")
-        this.state == SweeperState.Detonated
+        this.state = SweeperState.Detonated
         this.finishingChecks()
     }
 
@@ -413,6 +503,8 @@ __HIPERFORMANCE(() => {
                 }
             }
         }
+
+        this.timeTaken = performance.now() - this.startTime
     }
 
     /**
@@ -433,6 +525,9 @@ __HIPERFORMANCE(() => {
         if (this.state != SweeperState.Playing) return
 
         if (this.firstClick) {
+            // set the start time
+            this.startTime = performance.now()
+
             // first click should never be a mine (obviously) so regenerate grid
             // until it isnt a mine
             while (tileManager.getTile(this.grid[row][col].id).isMine) {
@@ -477,7 +572,7 @@ __HIPERFORMANCE(() => {
      * @param {MouseEvent} event 
      */
     onMouseMove(x, y, event) {
-        if (this.state != SweeperState.Playing) return
+        if (this.state != SweeperState.Playing && this.state != SweeperState.Spectating) return
 
         if (event.buttons == 4 || (event.shiftKey && event.buttons == 1)) {
             if (!this.isDragging) {
@@ -503,5 +598,6 @@ __HIPERFORMANCE(() => {
 const SweeperState = {
     Playing: 0,
     Exploded: 1,
-    Detonated: 2
+    Detonated: 2,
+    Spectating: 3
 }

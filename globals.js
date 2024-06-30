@@ -23,3 +23,5 @@ let sweeper
 let dt
 /** @type number | undefined */
 let lastTime
+
+let offsetX = 0

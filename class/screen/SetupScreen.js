@@ -16,7 +16,7 @@ class SetupScreen extends InitialisableClass {
         this.customOverlayShowing = false
 
         this.presetData = [
-            new SetupPresetData(9, 9, 10),
+            new SetupPresetData(2, 2, 3),
             new SetupPresetData(9, 9, 10),
             new SetupPresetData(16, 16, 40),
             new SetupPresetData(30, 16, 99)
@@ -203,7 +203,7 @@ class SetupScreen extends InitialisableClass {
         })
 
         // start
-        EventHandler.registerButton(880, 930, 160, 60, () => {
+        EventHandler.registerButton(865, 920, 190, 80, () => {
             if (Transitioner.to(GameState.Game)) {
                 let data = this.getPresetData()
                 sweeper = new Sweeper(data.width, data.height, data.mines)
@@ -305,17 +305,14 @@ __LOPERFORMANCE(() => {
 
         ctx.globalAlpha = 1
 
-
-
         // round rect
         ctx.fillStyle = "#4b4b4b4b"
-        ctx.strokeStyle = "#0000006e"
         ctx.beginPath()
         ctx.roundRect(70, 60, 1780, 960, 50)
         ctx.fill()
-        ctx.stroke()
 
         // LINE
+        ctx.strokeStyle = "#0000006e"
         ctx.beginPath()
         ctx.moveTo(960, 230)
         ctx.lineTo(960, 900)

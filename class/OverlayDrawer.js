@@ -5,8 +5,8 @@ class OverlayDrawer {
     static betaBuildCanvas = undefined
     static betaBuildString = "(really, really beta build)"
     static flags = {
-        debug: false,
-        beta: true
+        debug: true,
+        beta: false
     }
 
     static draw() {

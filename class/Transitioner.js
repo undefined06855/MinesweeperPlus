@@ -27,6 +27,24 @@ class Transitioner {
         Transitioner.transitionType = transitionType
         Transitioner.transitionLength = length
 
+        switch(newGameState) {
+            case GameState.Loading:
+                loadingScreen.initialised = false
+                break
+            case GameState.Title:
+                title.initialised = false
+                break
+            case GameState.GameSetup:
+                setupScreen.initialised = false
+                break
+            case GameState.Game:
+                // sweeper.initialised = false
+                break
+            default:
+                console.warn("Could not uninitialise game state %s!", newGameState)
+                return false
+        }
+
         return true
     }
 

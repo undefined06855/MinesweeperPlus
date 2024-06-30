@@ -166,14 +166,40 @@ class Utils {
             height: charHeight
         }
     }
+
+    /**
+     * @param {number} time 
+     * @returns {string}
+     */
+    static getTimeString(time) {
+        let ms = ~~(time % 1000)
+        let sec = ~~((time / 1000) % 60)
+        let min = ~~((time / 60000) % 60)
+        let hr = ~~((time / 3600000))
+
+        let strms = ms.toString()
+        let strsec = sec.toString().padStart(2, "0")
+        let strmin = min.toString().padStart(2, "0")
+        let strhr = hr.toString()
+
+        if (hr > 0) {
+            return `${strhr}:${strmin}:${strsec}`
+        }
+
+        if (min > 0) {
+            return `${strmin}:${strsec}`
+        }
+
+        if (sec > 0) {
+            return `${strsec}.${strms.padStart(3, "0")}`
+        }
+
+        return `${strms}ms`
+    }
 }
 
 class Easing {
     static easeInOut(x) {
         return (Math.cos(Math.PI*(1-Math.max(Math.min(x, 1), 0))) + 1) / 2
-    }
-
-    static easeInOutQuad(x) {
-        return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2
     }
 }
