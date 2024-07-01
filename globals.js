@@ -14,6 +14,8 @@ let loadingScreen
 let title
 /** @type SetupScreen | undefined */
 let setupScreen
+/** @type SettingsScreen | undefined */
+let settingsScreen
 
 // this is created in SetupScreen
 /** @type Sweeper | undefined */
@@ -23,5 +25,3 @@ let sweeper
 let dt
 /** @type number | undefined */
 let lastTime
-
-let offsetX = 0

@@ -9,6 +9,7 @@ class GlobalAssets {
     static counter = null
 
     static googIcons = {
-        tune: null
+        tune: null,
+        settings: null
     }
 }

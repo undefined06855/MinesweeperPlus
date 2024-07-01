@@ -1,0 +1,12 @@
+Hey! You found the info file!
+
+Here's just some info about some stuff I might forget like code formatting and whatever
+- Google icons are at 500 weight, 0 grade, 40px size and are called goog-whatever.png
+- Add all classes to LoadHandler::checkVitalClasses when creating them
+- For tiles, use `Array<typeof BaseTile>` or something like that
+- Transitioner.to transitions stuff (make sure to check for false before removing all buttons!)
+- Use the correct state enum! SweeperState for Sweeper, GameState for GameHandler etc
+- Images usually have a corresponding psd file with the same name next to them (i.e ./cover.png and ./cover.psd)
+
+
+- MinesweeperPlus devs (only one so far but eh)

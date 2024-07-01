@@ -4,13 +4,11 @@ class OverlayDrawer {
     /** @type OffscreenCanvas | undefined */
     static betaBuildCanvas = undefined
     static betaBuildString = "(really, really beta build)"
-    static flags = {
-        debug: new URL(window.location.href).searchParams.get("debug") == "true",
-        beta: true
-    }
+    static debugMemoryUsages = []
+    static logs = []
 
     static draw() {
-        if (OverlayDrawer.flags.debug) {
+        if (Settings.settings.debug.enabled) {
             ctx.lineWidth = 5
             ctx.textAlign = "left"
             ctx.strokeStyle = "#000000"
@@ -18,7 +16,10 @@ class OverlayDrawer {
             ctx.font = Fonter.get("monospace", 20)
             ctx.strokeText(`fps: ${(1000 / dt).toPrecision(2)}`, 30, 1050)
             ctx.fillText(`fps: ${(1000 / dt).toPrecision(2)}`, 30, 1050)
+            ctx.strokeText(`mem: ${(performance.memory.usedJSHeapSize / 1e6).toPrecision(3)}mb / ${(performance.memory.totalJSHeapSize / 1e6).toPrecision(3)}mb (${performance.memory.jsHeapSizeLimit} bytes max) (avg: ${((OverlayDrawer.debugMemoryUsages.reduce((a, b) => a + b, 0) / OverlayDrawer.debugMemoryUsages.length) || 0).toPrecision(3)}mb)`, 30, 1025)
+            ctx.fillText(`mem: ${(performance.memory.usedJSHeapSize / 1e6).toPrecision(3)}mb / ${(performance.memory.totalJSHeapSize / 1e6).toPrecision(3)}mb (${performance.memory.jsHeapSizeLimit} bytes max) (avg: ${((OverlayDrawer.debugMemoryUsages.reduce((a, b) => a + b, 0) / OverlayDrawer.debugMemoryUsages.length) || 0).toPrecision(3)}mb)`, 30, 1025)
             ctx.textAlign = "center"
+            OverlayDrawer.debugMemoryUsages.push(performance.memory.usedJSHeapSize / 1e6)
 
             // debug: draw all buttons etc
             ctx.lineWidth = 2
@@ -51,7 +52,7 @@ class OverlayDrawer {
             ctx.textAlign = "center"
         }
 
-        if (OverlayDrawer.flags.beta && GameHandler.state != GameState.Title && GameHandler.state != GameState.Loading) {
+        if (Settings.settings.beta && GameHandler.state != GameState.Title && GameHandler.state != GameState.Loading) {
             if (!OverlayDrawer.betaBuildCanvas) {
                 // skip drawing and use this frame to create the canvas
                 ctx.font = Fonter.get(FontFamily.Righteous, 20)
@@ -72,5 +73,23 @@ class OverlayDrawer {
             ctx.drawImage(OverlayDrawer.betaBuildCanvas, 1680, 10)
             ctx.globalAlpha = 1
         }
-    }    
+
+        if (Settings.settings.debug.enabled) {
+            ctx.textAlign = "left"
+            ctx.lineWidth = 5
+            ctx.fillStyle = "#ffffff"
+            ctx.strokeStyle = "#000000"
+            ctx.font = Fonter.get("monospace", 15)
+            let recentLogs = this.logs.slice(1).slice(-50)
+            let y = 100
+            for (let log of recentLogs) {
+                ctx.strokeText(log, 10, y)
+                ctx.fillText(log, 10, y)
+                y += 17
+            }
+            ctx.textAlign = "center"
+        }
+    }
 }
+
+setInterval(() => OverlayDrawer.debugMemoryUsages = [], 1000)

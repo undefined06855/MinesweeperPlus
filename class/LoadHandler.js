@@ -1,31 +1,45 @@
+/** @enum */
+let LoadEvent = {
+    HookerApplyHooks: 0,
+    LoadHandlerCheckVitalClasses: 1,
+    ClassCreatorPreClass: 2,
+    LoadHandlerLoadFonts: 3,
+    LoadHandlerLoadGlobalAssets: 4,
+    LoadHandlerRegisterTiles: 5,
+    LoadHandlerFinish: 6,
+    ClassCreatorPostClass: 7
+}
+
 class LoadHandler {
     static isAllLoaded = false
 
     static async loadAll() {
-        console.log("LoadHandler: hookError")
-        LoadHandler.hookError()
+        console.log("LoadHandler (on behalf of VanillaHooks): applyHooks")
+        document.dispatchEvent(new Event(LoadEvent.HookerApplyHooks))
+        Hooker.applyHooks()
 
         console.log("LoadHandler: checkVitalClasses")
+        document.dispatchEvent(new Event(LoadEvent.LoadHandlerCheckVitalClasses))
         LoadHandler.checkVitalClasses()
 
         console.log("LoadHandler: preClass")
+        document.dispatchEvent(new Event(LoadEvent.ClassCreatorPreClass))
         ClassCreator.preClass()
 
-        // load fonts (not really priority, so isn't factored into load time)
-        for (let family of Object.values(FontFamily)) {
-            ctx.font = Fonter.get(family, 69)
-            ctx.fillText("", 0, 0)
-        }
-
         console.log("LoadHandler: loadFonts")
+        document.dispatchEvent(new Event(LoadEvent.loadFonts))
         await LoadHandler.loadFonts()
         console.log("LoadHandler: loadGlobalAssets")
+        document.dispatchEvent(new Event(LoadEvent.LoadHandlerLoadGlobalAssets))
         await LoadHandler.loadGlobalAssets()
         console.log("LoadHandler: registerTiles")
+        // document.dispatchEvent(new Event(LoadEvents.LoadHandlerRegisterTiles))
         await LoadHandler.registerTiles()
         console.log("LoadHandler: finished!")
+        document.dispatchEvent(new Event(LoadEvent.LoadHandlerFinish))
         LoadHandler.isAllLoaded = true
         console.log("LoadHandler: postClass")
+        document.dispatchEvent(new Event(LoadEvent.ClassCreatorPostClass))
         ClassCreator.postClass()
         LoadHandler.loadStage = Infinity
     }
@@ -35,6 +49,7 @@ class LoadHandler {
         await tileManager.register(MineTile)
         await tileManager.register(MysteryTile)
         await tileManager.register(LyingTile)
+        document.dispatchEvent(new Event(LoadEvent.LoadHandlerRegisterTiles))
         // await tileManager.register(TestTile)
         tileManager.finishRegister()
     }
@@ -71,11 +86,26 @@ class LoadHandler {
         )
 
         GlobalAssets.googIcons.tune = setupAssets[0]
+
+        // title assets
+        let titleAssets = await Utils.loadImageAssets(
+            "./assets/title/",
+            [
+                "goog-settings.png"
+            ]
+        )
+
+        GlobalAssets.googIcons.settings = titleAssets[0]
     }
 
     // ok so i dont think this actually works
     // but like it's fine!! just ignore it
     static async loadFonts() {
+        for (let family of Object.values(FontFamily)) {
+            ctx.font = Fonter.get(family, 69)
+            ctx.fillText("", 0, 0)
+        }
+
         return new Promise(resolve => {
             function waitTick() {
                 // check if all fonts are loaded yet
@@ -96,6 +126,7 @@ class LoadHandler {
     static checkVitalClasses() {
         try {[
             LoadingScreen,
+            SettingsScreen,
             SetupScreen,
             Sweeper,
             Title,
@@ -110,10 +141,13 @@ class LoadHandler {
             LoadHandler,
             LowPerformanceMode,
             OverlayDrawer,
+            Settings,
             SetupPresetData,
+            SweeperBGTile,
             TileManager,
             Transitioner,
             Utils,
+            Hooker,
             BaseMineTile,
             BaseTile,
         ]} catch(error) {
@@ -126,48 +160,5 @@ class LoadHandler {
 
             throw new Error(`Class ${className} not found! Reloading to try to fix issue...`)
         }
-    }
-
-    static hookError() {
-        window.addEventListener("error", event => {
-            GameHandler.hasErrored = true
-            EventHandler.unregisterAllButtons()
-            EventHandler.unregisterAllMouseMoves()
-            EventHandler.unregisterAllScrolls()
-            ctx.textAlign = "left"
-            ctx.textBaseline = "middle"
-            ctx.resetTransform()
-
-            // ctx.fillStyle = "red"
-            // ctx.fillRect(0, 0, 1920, 1080)
-            ctx.fillStyle = "#000000"
-            ctx.strokeStyle = "#ffffff"
-            ctx.lineWidth = 5
-            ctx.font = Fonter.get(FontFamily.Righteous, 40)
-            ctx.strokeText("There was an unrecoverable error!", 10, 50)
-            ctx.fillText("There was an unrecoverable error!", 10, 50)
-    
-            ctx.font = Fonter.get(FontFamily.Righteous, 20)
-    
-            let splitFilename = event.filename.split("/")
-            let fileName = splitFilename.pop()
-            let pathName = splitFilename.pop()
-            ctx.strokeText(`${pathName}/${fileName} @ ${event.lineno}:${event.colno}`, 10, 80)
-            ctx.fillText(`${pathName}/${fileName} @ ${event.lineno}:${event.colno}`, 10, 80)
-    
-            let y = 110
-            let x = 10
-            let split = event.message.split(": ")
-            split = split.map((chunk, i) => chunk += i == split.length - 1 ? "" : ":")
-            for (let chunk of split) {
-                ctx.strokeText(chunk, x, y)
-                ctx.fillText(chunk, x, y)
-                y += 30
-                x += 10
-            }
-    
-            ctx.strokeText("(Please screenshot this and send to @undefined06855!)", 10, 1060)
-            ctx.fillText("(Please screenshot this and send to @undefined06855!)", 10, 1060)
-        })
     }
 }

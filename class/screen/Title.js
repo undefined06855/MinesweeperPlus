@@ -51,6 +51,12 @@ class Title extends InitialisableClass {
             if (Transitioner.to(GameState.GameSetup, Transition.Fade, 1000))
                 EventHandler.unregisterAllButtons()
         }, true)
+
+        let margin = 40
+        EventHandler.registerButton(1920 - 70 - margin, 1080 - 70 - margin, 45 + margin*2, 45 + margin*2, () => {
+            if (Transitioner.to(GameState.Settings, Transition.Fade, 1000))
+                EventHandler.unregisterAllButtons()
+        })
     }
 
     generateRow() {
@@ -78,7 +84,7 @@ class Title extends InitialisableClass {
             this.generateRow()
         }
 
-        if (Math.random() < 0.02 && this.animationTimer > 700) { // delay before bounces
+        if (Math.random() < 0.0012 * dt && this.animationTimer > 700) { // delay before bounces
             // bounce!
             // find random tile to bounce
             let row = ~~(Math.random() * this.height)
@@ -103,7 +109,7 @@ class Title extends InitialisableClass {
 
         if (this.animationTimer >= 500 && !this.hasShakenForTitle) {
             // shake!
-            this.animations.push(new Anim(AnimType.Shake, 15, 200, this.animations))
+            this.animations.push(new Anim(AnimType.Shake, 20, 250, this.animations))
             this.hasShakenForTitle = true
         }
 
@@ -161,9 +167,23 @@ __HIPERFORMANCE(() => {
             cb()
         }
 
+        // draw settings icon (https://stackoverflow.com/a/28416298)
+        let ox = 1920 - 70
+        let oy = 1080 - 70
+        ctx.filter = "invert(1)"
+        for (let offset of [[-1, -1], [0, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [0, 1], [1, 1]]) {
+            let x = offset[0] * 3 + ox
+            let y = offset[1] * 3 + oy
+            ctx.drawImage(GlobalAssets.googIcons.settings, x, y, 47, 47)
+        }
+        ctx.filter = "none"
+        ctx.drawImage(GlobalAssets.googIcons.settings, ox, oy, 47, 47)
+        ctx.filter = "none"
+
+
         // title (too much code here for what it does :despair:)
         ctx.fillStyle = "#000000"
-        ctx.strokeStyle = "#000000"
+        ctx.strokeStyle = "#ffffff"
         ctx.lineWidth = 15
         ctx.font = Fonter.get(FontFamily.Righteous, 120)
         let length = 500
@@ -178,6 +198,8 @@ __HIPERFORMANCE(() => {
             ctx.rotate(rotationAnimationFunction(this.animationTimer) * (Math.PI / 180))
             ctx.translate(-960, -270)
         }
+__HIPERFORMANCE(() => {
+        ctx.strokeStyle = "#000000"
         ctx.filter = "blur(10px)"
         ctx.globalAlpha *= 0.6
         ctx.strokeText("MINESWEEPER", 960, 270)
@@ -185,6 +207,7 @@ __HIPERFORMANCE(() => {
         ctx.filter = "none"
         ctx.globalAlpha /= 0.6
         ctx.strokeStyle = "#ffffff"
+})
         ctx.strokeText("MINESWEEPER", 960, 270)
         ctx.fillText("MINESWEEPER", 960, 270)
         if (this.animationTimer < length) {
@@ -217,6 +240,7 @@ __HIPERFORMANCE(() => {
         ctx.globalAlpha = everythingElseAlphaAnimationFunction(this.animationTimer)
 
         ctx.font = Fonter.get(FontFamily.Righteous, 50)
+__HIPERFORMANCE(() => {
         ctx.filter = "blur(5px)"
         ctx.strokeStyle = "#000000"
         ctx.globalAlpha *= 0.6
@@ -225,6 +249,7 @@ __HIPERFORMANCE(() => {
         ctx.filter = "none"
         ctx.globalAlpha /= 0.6
         ctx.strokeStyle = "#ffffff"
+})
         ctx.strokeText("click to play", 960, 500 + this.y * this.movementMultiplier)
         ctx.fillText("click to play", 960, 500 + this.y * this.movementMultiplier)
 

@@ -47,6 +47,8 @@ class SetupScreen extends InitialisableClass {
         /** @type Array<number> */
         this.customPresetCustomiseButtonIDs = []
 
+        this.bgCanvas = new OffscreenCanvas(1920, 1080)
+
         // this.presetData.push(new SetupPresetData(69, 69, 1))
         // this.presetData.push(new SetupPresetData(69, 69, 1))
         // this.presetData.push(new SetupPresetData(69, 69, 1))
@@ -133,6 +135,7 @@ class SetupScreen extends InitialisableClass {
                             return
                         }
                         checkMineCount()
+                        _this.updateBGCanvas()
                     }))
 
                     customPresetButtonIDs.push(EventHandler.registerButton(vertArrowX, vertArrowDownY, vertButtonWidth, vertButtonHeight, () => {
@@ -144,6 +147,7 @@ class SetupScreen extends InitialisableClass {
                             return
                         }
                         checkMineCount()
+                        _this.updateBGCanvas()
                     }))
 
                     customPresetButtonIDs.push(EventHandler.registerButton(horizArrowLeftX, horizArrowY, horizButtonWidth, horizButtonHeight, () => {
@@ -156,6 +160,7 @@ class SetupScreen extends InitialisableClass {
                             return
                         }
                         checkMineCount()
+                        _this.updateBGCanvas()
                     }))
 
                     customPresetButtonIDs.push(EventHandler.registerButton(horizArrowRightX, horizArrowY, horizButtonWidth, horizButtonHeight, () => {
@@ -167,6 +172,7 @@ class SetupScreen extends InitialisableClass {
                             return
                         }
                         checkMineCount()
+                        _this.updateBGCanvas()
                     }))
 
                     customPresetButtonIDs.push(EventHandler.registerButton(mineAdjLeftX, mineAdjY, horizButtonWidth, horizButtonHeight, () => {
@@ -193,6 +199,7 @@ class SetupScreen extends InitialisableClass {
             this.preset++
             if (this.preset > this.presetData.length - 1) this.preset = 0
             checkAddButtonForCustomSetup()
+            this.updateBGCanvas()
         })
 
         // left
@@ -200,6 +207,7 @@ class SetupScreen extends InitialisableClass {
             this.preset--
             if (this.preset < 0) this.preset = this.presetData.length - 1
             checkAddButtonForCustomSetup()
+            this.updateBGCanvas()
         })
 
         // start
@@ -244,6 +252,8 @@ class SetupScreen extends InitialisableClass {
                 }, true)
             })
         }
+
+        this.updateBGCanvas()
     }
 
     tick() {
@@ -261,46 +271,54 @@ class SetupScreen extends InitialisableClass {
         this.bgRotation = Math.sin(GameHandler.gt / 8600) * 2
     }
 
+    updateBGCanvas() {
+        console.log("update bg canvas")
+        let bgctx = this.bgCanvas.getContext("2d")
+
+        // draw onto offscreencanvas
+        let squares = Math.max(this.getPresetData().width, this.getPresetData().height)
+        if (squares & 1 == 0) squares++ // make it an odd number since that looks nicer
+        let sqw = 1920 / squares
+        let sqh = 1080 / squares
+        for (let x = 0; x < squares; x++) {
+            for (let y = 0; y < squares; y++) {
+                bgctx.drawImage(GlobalAssets.tile0, x * sqw, y * sqh, sqw, sqh)
+            }
+        }
+    }
+
     draw() {
         // bg
         ctx.fillStyle = "#ffffff"
         ctx.fillRect(0, 0, 1920, 1080)
 
         let _this = this
-        let squares = Math.max(_this.getPresetData().width, _this.getPresetData().height)
-        let sqw = 1920 / squares
-        let sqh = 1080 / squares
-
-        function drawBGStep(step) {
-            let scale = (5.5 - step / 7) * 0.6
-            ctx.globalAlpha = 1 - (step / 10)
-
+        function drawBGStep(i) {
+            let scale = (3 - i / 7)
+            ctx.globalAlpha = 1 - (i / 10)
             ctx.translate(960, 540)
             ctx.scale(scale, scale)
-            ctx.rotate(_this.bgRotation * step)
+            ctx.rotate(_this.bgRotation * i)
             ctx.translate(-960, -540)
-            for (let x = 0; x < squares; x++) {
-                for (let y = 0; y < squares; y++) {
-                    ctx.drawImage(GlobalAssets.tile0, x * sqw, y * sqh, sqw, sqh)
-                }
-            }
+            ctx.drawImage(_this.bgCanvas, 0, 0, 1920, 1080)
             ctx.translate(960, 540)
             ctx.scale(1/scale, 1/scale)
-            ctx.rotate(-_this.bgRotation * step)
+            ctx.rotate(-_this.bgRotation * i)
             ctx.translate(-960, -540)
         }
 
+__LOPERFORMANCE(() => {
+        drawBGStep(1)
+        drawBGStep(2)
+        drawBGStep(4)
+        drawBGStep(6)
+        drawBGStep(8)
+        drawBGStep(10)
+})
 __HIPERFORMANCE(() => {
         for (let i = 1; i < 10; i++) {
             drawBGStep(i)
         }
-})
-
-__LOPERFORMANCE(() => {
-        drawBGStep(3)
-        drawBGStep(5)
-        drawBGStep(7)
-        drawBGStep(9)
 })
 
         ctx.globalAlpha = 1
@@ -523,6 +541,8 @@ __HIPERFORMANCE(() => {
 
             ctx.font = Fonter.get(FontFamily.Righteous, 40)
             ctx.textAlign = "left"
+            ctx.fillStyle = "#000000"
+            ctx.strokeStyle = "#ffffff"
             let textStartY = 540 - this.currentlySelectedTile.description.length * (45 / 2)
             let i = 0
             for (let line of this.currentlySelectedTile.description) {

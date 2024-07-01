@@ -40,6 +40,9 @@ class Transitioner {
             case GameState.Game:
                 // sweeper.initialised = false
                 break
+            case GameState.Settings:
+                settingsScreen.initialised = false
+                break
             default:
                 console.warn("Could not uninitialise game state %s!", newGameState)
                 return false

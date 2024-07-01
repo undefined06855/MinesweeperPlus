@@ -17,7 +17,7 @@ body {
 }
 
 canvas {
-    background-color: #ff00dd;
+    background-color: #000000;
 }
 
 @media screen and (min-aspect-ratio: 1920/1080) {

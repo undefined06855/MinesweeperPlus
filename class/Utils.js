@@ -202,4 +202,8 @@ class Easing {
     static easeInOut(x) {
         return (Math.cos(Math.PI*(1-Math.max(Math.min(x, 1), 0))) + 1) / 2
     }
+
+    static double(x) {
+        return -4 * (x - 0.5) ** 2 + 1
+    }
 }

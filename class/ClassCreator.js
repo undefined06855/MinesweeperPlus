@@ -7,5 +7,6 @@ class ClassCreator {
     static postClass() {
         title = new Title()
         setupScreen = new SetupScreen()
+        settingsScreen = new SettingsScreen()
     }
 }

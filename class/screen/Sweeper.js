@@ -17,6 +17,7 @@ class Sweeper extends InitialisableClass {
 
         this.firstClick = true
         this.state = SweeperState.Playing
+        this.endingState = null
 
         this.tileSize = 60
         this.offsetX = (1920 / 2) - (this.width * this.tileSize / 2)
@@ -30,6 +31,10 @@ class Sweeper extends InitialisableClass {
         this.dragStartMouseY = 0
         this.dragStartOffsetX = 0
         this.dragStartOffsetY = 0
+        this.dragSpeedX = 0
+        this.dragSpeedY = 0
+        this.targetDragSpeedX = 0
+        this.targetDragSpeedY = 0
         this.isDragging = false
 
         this.gameOverAnimationTimer = 0
@@ -49,8 +54,9 @@ class Sweeper extends InitialisableClass {
 
         this.startTime = 0
         this.timeTaken = 0
-        
-        this.createGrid()
+
+        /** @type Array<SweeperBGTile> */
+        this.backgroundTiles = []
     }
 
     init() {
@@ -60,6 +66,11 @@ class Sweeper extends InitialisableClass {
         
         // and the dragging and scrolling
         EventHandler.registerMouseMove(0, 0, 1920, 1080, (x, y, event) => this.onMouseMove(x, y, event))
+
+        this.createGrid()
+        for (let i = 0; i < Math.random() * 4; i++) {
+            this.backgroundTiles.push(new SweeperBGTile())
+        }
     }
 
     createGrid() {
@@ -124,9 +135,9 @@ class Sweeper extends InitialisableClass {
             if (this.gameOverAnimationTimer >= 4700 && !this.hasAddedGameOverButtons) {
                 this.gameOverButtonIDS.push(EventHandler.registerButton(960 - width/2, 800, width, 50, () => {
                     console.log("continue")
+                    if (!Transitioner.to(GameState.GameSetup)) return
                     EventHandler.unregisterAllButtons()
                     EventHandler.unregisterAllMouseMoves()
-                    Transitioner.to(GameState.GameSetup)
                 }))
 
                 this.gameOverButtonIDS.push(EventHandler.registerButton(960 - width/2, 860, width, 50, () => {
@@ -137,9 +148,9 @@ class Sweeper extends InitialisableClass {
 
                     EventHandler.registerButton(1670, 1000, 240, 60, () => {
                         console.log("continue")
+                        if (!Transitioner.to(GameState.GameSetup)) return
                         EventHandler.unregisterAllButtons()
                         EventHandler.unregisterAllMouseMoves()
-                        Transitioner.to(GameState.GameSetup)
                     })
                 }))
 
@@ -150,11 +161,58 @@ class Sweeper extends InitialisableClass {
         if (this.state == SweeperState.Spectating) {
             this.spectateAnimationTimer += dt
         }
+
+        if (Math.random() < 0.0005 * dt && this.backgroundTiles.length < 5) {
+            this.backgroundTiles.push(new SweeperBGTile())
+        }
+
+        for (let tile of this.backgroundTiles) {
+            tile.tick()
+        }
+
+        this.dragSpeedX += (this.targetDragSpeedX - this.dragSpeedX) / (this.isDragging ? 10 : 42)
+        this.dragSpeedY += (this.targetDragSpeedY - this.dragSpeedY) / (this.isDragging ? 10 : 42)
     }
 
     draw() {
-        ctx.fillStyle = "#ffffff"
+        ctx.fillStyle = "#e6e6e6"
         ctx.fillRect(0, 0, 1920, 1080)
+
+        // draw background
+        /** @type Array<typeof SweeperBGTile.prototype.id> */
+        let toRemove = []
+        for (let tile of this.backgroundTiles) {
+            let x = tile.x + this.dragSpeedX*6
+            let y = tile.y + this.dragSpeedY*6
+
+            let rotation = tile.rotation * Math.PI/180
+            let centerX = x + tile.width/2
+            let centerY = y + tile.height/2
+            let scale = Easing.double(Math.min(1, tile.animTick / tile.lifetime))
+            if (scale <= 0) {
+                console.log("removin id=", tile.id)
+                toRemove.push(tile.id)
+                continue // dont want to draw anything with zero scale!
+            }
+
+            ctx.translate(centerX, centerY)
+            ctx.scale(scale, scale)
+            ctx.rotate(rotation, rotation)
+            ctx.translate(-centerX, -centerY)
+            ctx.fillStyle = "#414141" + tile.opacityHexString
+            ctx.fillRect(x, y, tile.width, tile.height)
+            ctx.translate(centerX, centerY)
+            ctx.scale(1 / scale, 1 / scale)
+            ctx.rotate(-rotation, -rotation)
+            ctx.translate(-centerX, -centerY)
+        }
+
+        this.backgroundTiles = this.backgroundTiles.filter(tile => !toRemove.includes(tile.id))
+
+        ctx.font = Fonter.get("monospace", 30)
+        ctx.fillStyle= "#000000"
+        ctx.fillText(`tiles: ${this.backgroundTiles.length}`, 700, 200)
+
 
 __HIPERFORMANCE(() => {
         // draw shadow
@@ -164,6 +222,7 @@ __HIPERFORMANCE(() => {
         ctx.filter = "none"
 })
 
+        // draw tiles
         for (let row = 0; row < this.height; row++) {
             for (let col = 0; col < this.width; col++) {
                 let cell = this.grid[row][col]
@@ -267,7 +326,7 @@ __HIPERFORMANCE(() => {
                 ctx.translate(-960, -130)
             }
             ctx.translate(0, titleWobbleY)
-            if (this.state == SweeperState.Exploded) {
+            if (this.endingState == SweeperState.Exploded) {
                 ctx.strokeText("GAME OVER!", 960, 130)
                 ctx.fillText("GAME OVER!", 960, 130)
             } else {
@@ -292,7 +351,7 @@ __HIPERFORMANCE(() => {
             ctx.font = Fonter.get(FontFamily.Righteous, 40)
             ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 2000) / 700
 
-            if (this.state == SweeperState.Exploded) {
+            if (this.endingState == SweeperState.Exploded) {
                 ctx.strokeText("you hit a mine!", 960, 270)
                 ctx.fillText("you hit a mine!", 960, 270)
     
@@ -365,11 +424,11 @@ __HIPERFORMANCE(() => {
             ctx.textAlign = "center"
             ctx.font = Fonter.get(FontFamily.Righteous, 45)
 
-            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 4700) / 2000
+            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 4700) / 1000
             ctx.strokeText("continue", 960, 830)
             ctx.fillText("continue", 960, 830)
 
-            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 5100) / 2000
+            ctx.globalAlpha = Math.max(0, this.gameOverAnimationTimer - 5100) / 1000
             ctx.strokeText("spectate", 960, 890)
             ctx.fillText("spectate", 960, 890)
 
@@ -427,7 +486,11 @@ __HIPERFORMANCE(() => {
             if (surroundingBombs == 0) {
                 Utils.loopOverSurroundingCells(cell.row, cell.col, cell => {
                     if (cell.state != CellState.Uncovered) {
-                        this.click(cell.row, cell.col)
+                        try {
+                            this.click(cell.row, cell.col)
+                        } catch(_) {
+                            console.info("maximum stack size?")
+                        }
                     }
                 })
             }
@@ -504,6 +567,7 @@ __HIPERFORMANCE(() => {
             }
         }
 
+        this.endingState = this.state
         this.timeTaken = performance.now() - this.startTime
     }
 
@@ -583,13 +647,21 @@ __HIPERFORMANCE(() => {
                 this.dragStartOffsetY = this.offsetY
             } else {
                 // continue dragging
-                this.offsetX = (x - this.dragStartMouseX) + this.dragStartOffsetX 
-                this.offsetY = (y - this.dragStartMouseY) + this.dragStartOffsetY 
+                let newOffsetX = (x - this.dragStartMouseX) + this.dragStartOffsetX
+                let newOffsetY = (y - this.dragStartMouseY) + this.dragStartOffsetY
+
+                this.targetDragSpeedX = newOffsetX - this.offsetX
+                this.targetDragSpeedY = newOffsetY - this.offsetY
+
+                this.offsetX = newOffsetX
+                this.offsetY = newOffsetY
             }
 
             this.isDragging = true
         } else {
             this.isDragging = false
+            this.targetDragSpeedX = 0
+            this.targetDragSpeedY = 0
         }
     }
 }

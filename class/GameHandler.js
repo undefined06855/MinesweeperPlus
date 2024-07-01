@@ -3,7 +3,8 @@ let GameState = {
     Loading: -1,
     Title: 0,
     Game: 1,
-    GameSetup: 2
+    GameSetup: 2,
+    Settings: 3
 }
 
 class GameHandler {
@@ -37,9 +38,10 @@ class GameHandler {
         // place after the zoom out to only clear shit inside the zoomed out area
         ctx.clearRect(0, 0, 1920, 1080)
 
-        if (OverlayDrawer.flags.debug) {
-            ctx.scale(0.5, 0.5)
-            ctx.translate(960, 540)
+        let zoom = Settings.settings.debug.zoom
+        if (Settings.settings.debug.enabled) {
+            ctx.scale(zoom, zoom)
+            ctx.translate(960 / zoom - 960, 540 / zoom - 540)
         }
 
         dt = (performance.now() - lastTime)// * GameHandler.speedMultiplier
@@ -65,6 +67,11 @@ class GameHandler {
                 title.animations.forEach(anim => anim.preDraw())
                 title.draw()
                 title.animations.forEach(anim => anim.postDraw())
+                break
+            case GameState.Settings:
+                settingsScreen.tryInit()
+                settingsScreen.tick()
+                settingsScreen.draw()
                 break
             case GameState.GameSetup:
                 // believe it or not, setupscreen does have animations! try to find them...
@@ -98,10 +105,13 @@ class GameHandler {
 
         Transitioner.draw()
 
-        if (OverlayDrawer.flags.debug) {
-            ctx.strokeStyle = "red"
-            ctx.lineWidth = 8
-            ctx.strokeRect(0, 0, 1920, 1080)
+        if (Settings.settings.debug.enabled) {
+            if (zoom != 1) {
+                ctx.strokeStyle = "red"
+                ctx.lineWidth = 8
+                ctx.strokeRect(0, 0, 1920, 1080)
+            }
+
     
             ctx.resetTransform()
         }
