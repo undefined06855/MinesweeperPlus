@@ -190,7 +190,6 @@ class Sweeper extends InitialisableClass {
             let centerY = y + tile.height/2
             let scale = Easing.double(Math.min(1, tile.animTick / tile.lifetime))
             if (scale <= 0) {
-                console.log("removin id=", tile.id)
                 toRemove.push(tile.id)
                 continue // dont want to draw anything with zero scale!
             }
@@ -208,10 +207,6 @@ class Sweeper extends InitialisableClass {
         }
 
         this.backgroundTiles = this.backgroundTiles.filter(tile => !toRemove.includes(tile.id))
-
-        ctx.font = Fonter.get("monospace", 30)
-        ctx.fillStyle= "#000000"
-        ctx.fillText(`tiles: ${this.backgroundTiles.length}`, 700, 200)
 
 
 __HIPERFORMANCE(() => {
